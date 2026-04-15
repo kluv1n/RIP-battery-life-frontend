@@ -1,0 +1,70 @@
+import { Link } from "react-router-dom";
+import { useEffect, useState, type MouseEvent } from "react";
+import {
+  fallbackImageUrl,
+  resolveMediaUrl,
+  type BatteryServiceMock,
+} from "../../modules/batteryApi";
+import { addBatteryToMockLife } from "../../modules/mock";
+
+function photoSrc(photo_url: string, imageError: boolean): string {
+  if (imageError || !photo_url?.trim()) return fallbackImageUrl();
+  return resolveMediaUrl(photo_url);
+}
+
+export default function ServiceCard({ battery }: { battery: BatteryServiceMock }) {
+  const [imageError, setImageError] = useState(false);
+  const [imageUrl, setImageUrl] = useState(photoSrc(battery.photo_url, false));
+  const [adding, setAdding] = useState(false);
+
+  useEffect(() => {
+    setImageError(false);
+    setImageUrl(photoSrc(battery.photo_url, false));
+  }, [battery.photo_url]);
+
+  const handleImageError = () => {
+    setImageError(true);
+    setImageUrl(fallbackImageUrl());
+  };
+
+  const handleAdd = async (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    setAdding(true);
+    try {
+      const result = await addBatteryToMockLife(battery.battery_id);
+      if (!result.ok) {
+        window.alert("message" in result ? result.message : "Не удалось добавить в заявку.");
+      }
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  return (
+    <div className="card">
+      <Link to={`/battery/${battery.battery_id}`} className="card__link">
+        <div className="card__media">
+          <img
+            className="card__photo"
+            src={imageError ? fallbackImageUrl() : imageUrl}
+            alt={battery.title}
+            width={400}
+            height={300}
+            decoding="async"
+            onError={handleImageError}
+          />
+        </div>
+        <h1>{battery.title}</h1>
+        <p className="card__employees">
+          Ёмкость и напряжение: {battery.capacity_mah} мА·ч, {battery.voltage_v} В
+        </p>
+        <p className="card__description">{battery.short_description}</p>
+      </Link>
+      <div className="card__add-form">
+        <button type="button" className="cart-button" onClick={handleAdd} disabled={adding}>
+          {adding ? "Добавление…" : "Добавить в заявку"}
+        </button>
+      </div>
+    </div>
+  );
+}
