@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import Form from "react-bootstrap/Form";
 import CatalogChrome from "../../components/CatalogChrome/CatalogChrome";
-import { BATTERIES_MOCK, getMockBattery, addBatteryToMockLife } from "../../modules/mock";
+import { BATTERIES_MOCK, getMockBattery, MOCK_COVER, MOCK_VIDEO } from "../../modules/mock";
 import {
   fallbackImageUrl,
+  getBatteryType,
   resolveMediaUrl,
   type BatteryServiceMock,
 } from "../../modules/batteryApi";
@@ -13,26 +13,53 @@ import {
 export default function ServicePage() {
   const [battery, setBattery] = useState<BatteryServiceMock | null>(null);
   const [mediaError, setMediaError] = useState(false);
-  const [adding, setAdding] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [useOfflineMediaStub, setUseOfflineMediaStub] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!id) {
-      setBattery(null);
-      return;
-    }
-    setMediaError(false);
-    const n = Number(id);
-    const resolved =
-      getMockBattery(n) ?? BATTERIES_MOCK.find((b) => b.battery_id === n) ?? null;
-    setBattery(resolved);
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
+      if (!id) {
+        setBattery(null);
+        setLoading(false);
+        return;
+      }
+      setMediaError(false);
+      const n = Number(id);
+      const remote = await getBatteryType(n);
+      if (cancelled) return;
+      if (remote) {
+        setUseOfflineMediaStub(false);
+        setBattery(remote);
+        setLoading(false);
+        return;
+      }
+      setUseOfflineMediaStub(true);
+      const resolved = getMockBattery(n) ?? BATTERIES_MOCK.find((b) => b.battery_id === n) ?? null;
+      setBattery(resolved);
+      setLoading(false);
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
-  const videoUrl = useMemo(() => (battery ? resolveMediaUrl(battery.video) : ""), [battery]);
+  const videoUrl = useMemo(() => {
+    if (!battery) return "";
+    if (useOfflineMediaStub) return MOCK_VIDEO;
+    return resolveMediaUrl(battery.video);
+  }, [battery, useOfflineMediaStub]);
   const posterUrl = useMemo(
-    () => (battery ? resolveMediaUrl(battery.photo_url) || fallbackImageUrl() : fallbackImageUrl()),
-    [battery],
+    () => {
+      if (!battery) return fallbackImageUrl();
+      if (useOfflineMediaStub) return MOCK_COVER;
+      return resolveMediaUrl(battery.photo_url) || fallbackImageUrl();
+    },
+    [battery, useOfflineMediaStub],
   );
 
   const showVideo = Boolean(battery?.video?.trim()) && !mediaError;
@@ -42,25 +69,18 @@ export default function ServicePage() {
     navigate("/");
   };
 
-  const handleAdd = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!battery) return;
-    setAdding(true);
-    try {
-      const result = await addBatteryToMockLife(battery.battery_id);
-      if (!result.ok) {
-        window.alert("message" in result ? result.message : "Не удалось добавить в заявку.");
-        return;
-      }
-    } finally {
-      setAdding(false);
-    }
-  };
-
-  if (!id || !battery) {
+  if (!id || (!loading && !battery)) {
     return (
       <div className="space">
         <p style={{ color: "var(--neter-text-muted)" }}>Услуга не найдена.</p>
+      </div>
+    );
+  }
+
+  if (loading || !battery) {
+    return (
+      <div className="space">
+        <p style={{ color: "var(--neter-text-muted)" }}>Загрузка...</p>
       </div>
     );
   }
@@ -180,13 +200,6 @@ export default function ServicePage() {
               </div>
             </div>
           </div>
-          <aside className="detail-card__actions">
-            <Form className="add-to-cart-form add-to-cart-form--aside" onSubmit={handleAdd}>
-              <button type="submit" className="cart-button cart-button--block" disabled={adding}>
-                {adding ? "Добавление…" : "Добавить в заявку"}
-              </button>
-            </Form>
-          </aside>
         </div>
       </div>
     </>

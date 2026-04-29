@@ -1,11 +1,10 @@
 import { Link } from "react-router-dom";
-import { useEffect, useState, type MouseEvent } from "react";
+import { useEffect, useState } from "react";
 import {
   fallbackImageUrl,
   resolveMediaUrl,
   type BatteryServiceMock,
 } from "../../modules/batteryApi";
-import { addBatteryToMockLife } from "../../modules/mock";
 
 function photoSrc(photo_url: string, imageError: boolean): string {
   if (imageError || !photo_url?.trim()) return fallbackImageUrl();
@@ -15,7 +14,6 @@ function photoSrc(photo_url: string, imageError: boolean): string {
 export default function ServiceCard({ battery }: { battery: BatteryServiceMock }) {
   const [imageError, setImageError] = useState(false);
   const [imageUrl, setImageUrl] = useState(photoSrc(battery.photo_url, false));
-  const [adding, setAdding] = useState(false);
 
   useEffect(() => {
     setImageError(false);
@@ -25,19 +23,6 @@ export default function ServiceCard({ battery }: { battery: BatteryServiceMock }
   const handleImageError = () => {
     setImageError(true);
     setImageUrl(fallbackImageUrl());
-  };
-
-  const handleAdd = async (e: MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    setAdding(true);
-    try {
-      const result = await addBatteryToMockLife(battery.battery_id);
-      if (!result.ok) {
-        window.alert("message" in result ? result.message : "Не удалось добавить в заявку.");
-      }
-    } finally {
-      setAdding(false);
-    }
   };
 
   return (
@@ -60,11 +45,6 @@ export default function ServiceCard({ battery }: { battery: BatteryServiceMock }
         </p>
         <p className="card__description">{battery.short_description}</p>
       </Link>
-      <div className="card__add-form">
-        <button type="button" className="cart-button" onClick={handleAdd} disabled={adding}>
-          {adding ? "Добавление…" : "Добавить в заявку"}
-        </button>
-      </div>
     </div>
   );
 }

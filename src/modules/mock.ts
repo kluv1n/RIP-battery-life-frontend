@@ -27,6 +27,7 @@ export const BATTERIES_MOCK: BatteryServiceMock[] = [
     listed_at: "2026-01-10T12:00:00.000Z",
     detail_current_a_str: "0,45",
     detail_runtime_hours_str: "12,40",
+    short_description_en: "Universal 18650 Li-ion cell for laptops, power banks, and compact backup packs.",
   },
   {
     battery_id: 2,
@@ -42,6 +43,8 @@ export const BATTERIES_MOCK: BatteryServiceMock[] = [
     listed_at: "2026-02-05T09:00:00.000Z",
     detail_current_a_str: "0,80",
     detail_runtime_hours_str: "5,20",
+    short_description_en:
+      "Flat lithium-polymer battery for drones and wearables with lightweight compact form.",
   },
   {
     battery_id: 3,
@@ -57,6 +60,8 @@ export const BATTERIES_MOCK: BatteryServiceMock[] = [
     listed_at: "2026-01-22T15:30:00.000Z",
     detail_current_a_str: "2,50",
     detail_runtime_hours_str: "36,00",
+    short_description_en:
+      "LiFePO4 battery block for transport and stationary systems with high cycle safety life.",
   },
   {
     battery_id: 4,
@@ -72,6 +77,8 @@ export const BATTERIES_MOCK: BatteryServiceMock[] = [
     listed_at: "2025-12-18T11:00:00.000Z",
     detail_current_a_str: "0,12",
     detail_runtime_hours_str: "18,50",
+    short_description_en:
+      "Nickel-metal hydride AA battery for remotes and flashlights with reliable daily charge.",
   },
 ];
 
