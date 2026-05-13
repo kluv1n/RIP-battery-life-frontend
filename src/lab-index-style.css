@@ -266,6 +266,12 @@ header {
     opacity: 0.7;
 }
 
+.cart-button--muted {
+    cursor: default;
+    opacity: 0.65;
+    pointer-events: none;
+}
+
 .add-to-cart-form {
     display: flex;
     flex-wrap: wrap;
@@ -561,6 +567,41 @@ a.battery-life-card:hover .battery-life-card__info {
 .card.card--photo-rank:hover .card__link--photo-rank .card__photo-rank-en,
 .card.card--photo-rank:hover .card__link--photo-rank .card__similarity {
     color: var(--neter-hover);
+}
+
+/* Каталог: кнопка «В заявку» под карточкой (лаб. 7) */
+.card-service-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+    width: 100%;
+    min-width: 0;
+}
+
+.card-service-wrapper .card-add-btn {
+    align-self: center;
+    min-width: 200px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--neter-border);
+    background: var(--neter-white);
+    color: var(--neter-text);
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease;
+}
+
+.card-service-wrapper .card-add-btn:hover:not(:disabled) {
+    border-color: var(--neter-hover);
+    color: var(--neter-hover);
+}
+
+.card-service-wrapper .card-add-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
 }
 
 .card__add-form {

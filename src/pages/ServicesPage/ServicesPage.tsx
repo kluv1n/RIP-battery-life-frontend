@@ -10,11 +10,13 @@ import {
   type BatteryServiceMock,
 } from "../../modules/batteryApi";
 import { BATTERIES_MOCK, filterMockBatteries, type BatteryFilters } from "../../modules/mock";
+import { useAppSelector } from "../../store/hooks";
 import "./ServicesPage.css";
 
 const initialFilters = (): BatteryFilters => ({ title: "" });
 
 export default function ServicesPage() {
+  const isAuthenticated = useAppSelector((s) => s.user.isAuthenticated);
   const [sourceBatteries, setSourceBatteries] = useState<BatteryServiceMock[]>(BATTERIES_MOCK);
   const [batteries, setBatteries] = useState<BatteryServiceMock[]>(BATTERIES_MOCK);
   const [filters, setFilters] = useState<BatteryFilters>(initialFilters);
@@ -63,6 +65,23 @@ export default function ServicesPage() {
     searchByImage,
     resetSearch,
   } = useBatteryImageSearch(clipItems, clipSessionActive);
+
+  const prevAuthRef = useRef(isAuthenticated);
+
+  useEffect(() => {
+    const wasAuth = prevAuthRef.current;
+    prevAuthRef.current = isAuthenticated;
+    if (wasAuth && !isAuthenticated) {
+      setFilters(initialFilters());
+      setSelectedImage((img) => {
+        if (img?.startsWith("blob:")) URL.revokeObjectURL(img);
+        return null;
+      });
+      setClipSessionActive(false);
+      resetSearch();
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }, [isAuthenticated, resetSearch]);
 
   const batteryById = useMemo(() => {
     const m = new Map<number, BatteryServiceMock>();
@@ -189,7 +208,7 @@ export default function ServicesPage() {
 
   return (
     <>
-      <CatalogChrome toolbarLeading={toolbarLeading} toolbarForm={toolbarForm} />
+      <CatalogChrome embedInLayout toolbarLeading={toolbarLeading} toolbarForm={toolbarForm} />
       <div className="space">
         {workerError ? <Alert variant="warning">Photo search error: {workerError}</Alert> : null}
         <h2 className="section-title">Battery types</h2>

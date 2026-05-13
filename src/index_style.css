@@ -5,9 +5,127 @@
   min-height: 100vh;
 }
 
+/* Как в new_front: колонка на всю высоту + крошки под navbar */
+.main-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--neter-bg);
+}
+
+/* Шапка и крошки не сжимаются при нехватке высоты экрана (избегаем «наезда» на контент). */
+.main-layout > .battery-app-header-wrap,
+.main-layout > .app-breadcrumbs {
+  flex-shrink: 0;
+}
+
+.app-breadcrumbs {
+  background: #082a38;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.18);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 14px 32px 16px;
+  box-sizing: border-box;
+}
+
+.app-breadcrumbs__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.app-breadcrumbs__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.app-breadcrumbs__item:not(:last-child)::after {
+  content: "/";
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 400;
+  user-select: none;
+}
+
+.app-breadcrumbs__link {
+  color: rgba(255, 255, 255, 0.88);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.app-breadcrumbs__link:hover {
+  color: var(--neter-hover);
+}
+
+.app-breadcrumbs__current {
+  color: var(--neter-white);
+  font-weight: 500;
+}
+
+/* Корзина в тулбаре — как new_front cart-row */
+.cart-row {
+  margin-bottom: 0;
+}
+
+.cart-row__link,
+.cart-row__inactive {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: var(--neter-card-bg);
+  border: 1px solid var(--neter-border);
+  color: var(--neter-text);
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.cart-row__link {
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.cart-row__link:hover {
+  border-color: var(--neter-hover);
+  color: var(--neter-hover);
+}
+
+.cart-row__icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.cart-row__text {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: inherit;
+}
+
+.cart-row__inactive {
+  opacity: 0.5;
+  pointer-events: none;
+  color: var(--neter-text-muted);
+}
+
 .application-not-found {
   text-align: center;
   color: var(--neter-text-muted);
   max-width: 1200px;
   margin: 0 auto;
+}
+
+@media (max-width: 991.98px) {
+  .app-breadcrumbs {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
 }

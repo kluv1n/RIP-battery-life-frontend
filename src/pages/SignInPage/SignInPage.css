@@ -1,0 +1,97 @@
+.auth-page--battery {
+  max-width: 440px;
+  margin: 32px auto;
+  padding: 0 20px 48px;
+}
+
+.auth-page--battery .auth-page__panel {
+  background: var(--neter-card-bg);
+  border: 1px solid var(--neter-border);
+  border-radius: 12px;
+  padding: 28px 32px;
+  box-shadow: 0 8px 32px rgba(10, 49, 65, 0.12);
+}
+
+.auth-page--battery .auth-page__title {
+  margin: 0 0 20px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--neter-text);
+}
+
+.auth-page--battery .auth-page__error {
+  background: rgba(232, 30, 37, 0.08);
+  border: 1px solid rgba(232, 30, 37, 0.35);
+  color: #b00020;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+}
+
+.auth-page--battery .auth-page__form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.auth-page--battery .auth-page__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--neter-text-muted);
+  margin-top: 8px;
+}
+
+.auth-page--battery .auth-page__input {
+  border: 1px solid var(--neter-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 1rem;
+  background-color: var(--neter-white);
+  color: var(--neter-text);
+}
+
+.auth-page--battery .auth-page__input:focus {
+  outline: none;
+  border-color: var(--neter-hover);
+  box-shadow: 0 0 0 2px rgba(44, 180, 194, 0.2);
+}
+
+.auth-page--battery .auth-page__submit {
+  margin-top: 20px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: var(--neter-header);
+  color: var(--neter-white);
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--neter-header);
+}
+
+.auth-page--battery .auth-page__submit:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.auth-page--battery .auth-page__submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.auth-page--battery .auth-page__footer {
+  margin-top: 16px;
+  font-size: 0.9rem;
+  color: var(--neter-text-muted);
+}
+
+.auth-page--battery .auth-page__footer a {
+  color: var(--icon-default);
+  font-weight: 600;
+}
+
+.auth-page--battery .auth-page__spinner {
+  vertical-align: middle;
+}

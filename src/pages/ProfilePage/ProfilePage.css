@@ -1,0 +1,23 @@
+.profile-page {
+  padding: 0 20px 48px;
+}
+
+.profile-page__inner {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.profile-page__title {
+  margin: 20px 0 12px;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.profile-page__alert code {
+  font-size: 0.85em;
+}
+
+.profile-page__jwt-preview {
+  font-family: ui-monospace, monospace;
+  font-size: 0.85rem;
+}

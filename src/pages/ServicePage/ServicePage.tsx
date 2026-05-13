@@ -120,7 +120,7 @@ export default function ServicePage() {
 
   return (
     <>
-      <CatalogChrome toolbarForm={toolbarForm} />
+      <CatalogChrome embedInLayout toolbarForm={toolbarForm} />
       <div className="detail-wrapper detail-wrapper--battery">
         <Link to="/" className="back-link">
           ← Back to catalog

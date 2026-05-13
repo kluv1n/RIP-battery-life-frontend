@@ -1,6 +1,23 @@
+import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
+import BatteryAppHeader from "../components/BatteryAppHeader/BatteryAppHeader";
+import BreadCrumbs from "../components/BreadCrumbs/BreadCrumbs";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { fetchBatteryLifeApplicationCart } from "../store/slices/batteryLifeApplicationSlice";
 
-/** Как в Gin-шаблонах: без общего хедера — каждая страница сама подключает свой кусок вёрстки. */
 export default function MainLayout() {
-  return <Outlet />;
+  const dispatch = useAppDispatch();
+  const isAuthenticated = useAppSelector((s) => s.user.isAuthenticated);
+
+  useEffect(() => {
+    void dispatch(fetchBatteryLifeApplicationCart());
+  }, [dispatch, isAuthenticated]);
+
+  return (
+    <div className="main-layout">
+      <BatteryAppHeader />
+      <BreadCrumbs />
+      <Outlet />
+    </div>
+  );
 }

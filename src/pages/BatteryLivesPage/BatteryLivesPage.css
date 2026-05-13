@@ -1,0 +1,95 @@
+.battery-lives-page {
+  padding: 0 20px 48px;
+}
+
+.battery-lives-page__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.battery-lives-page__heading {
+  margin: 20px 0 8px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--neter-text);
+}
+
+.battery-lives-page__filters {
+  background: var(--neter-card-bg);
+  border: 1px solid var(--neter-border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.battery-lives-page__filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.battery-lives-page__fg {
+  min-width: 160px;
+}
+
+.battery-lives-page__fg--grow {
+  flex: 1;
+  min-width: 200px;
+}
+
+.battery-lives-page__filters .form-label {
+  color: var(--neter-text-muted);
+}
+
+.battery-lives-page__filters .form-control,
+.battery-lives-page__filters .form-select {
+  background: var(--neter-white);
+  border: 1px solid var(--neter-border);
+  color: var(--neter-text);
+}
+
+.battery-lives-page__apply {
+  margin-top: 16px;
+  font-weight: 600;
+}
+
+.battery-lives-page__error {
+  color: #b00020;
+  margin-bottom: 12px;
+}
+
+.battery-lives-page__loader {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0;
+}
+
+.battery-lives-page__table-wrap {
+  overflow-x: auto;
+}
+
+.battery-lives-page__linkish {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--icon-default);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.battery-lives-page__linkish:hover {
+  color: var(--neter-hover);
+}
+
+.battery-lives-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.battery-lives-page__empty {
+  color: var(--neter-text-muted);
+  margin-top: 16px;
+}

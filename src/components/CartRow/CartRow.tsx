@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
-import { getBatteryLifeCart, type BatteryLifeCartJSON } from "../../modules/batteryApi";
+import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { fetchBatteryLifeApplicationCart } from "../../store/slices/batteryLifeApplicationSlice";
 
 function CartIcon() {
   return (
-    <svg className="cart-button__icon" viewBox="0 0 24 24" aria-hidden="true">
+    <svg className="cart-row__icon" viewBox="0 0 24 24" aria-hidden="true">
       <path
         d="M7 4H5L4 6h2l3 9h9l3-7H13"
         fill="none"
@@ -18,33 +20,41 @@ function CartIcon() {
   );
 }
 
-/** Гость: GET корзины для Network/счётчика; переход в заявку по клику отключён. */
-export default function CartRow() {
-  const [cart, setCart] = useState<BatteryLifeCartJSON | null>(null);
+/** Как в new_front `CartRow`: счётчик + ссылка на черновик при наличии позиций. */
+export default function CartRow({ className = "" }: { className?: string }) {
+  const dispatch = useAppDispatch();
+  const { isAuthenticated } = useAppSelector((s) => s.user);
+  const cart = useAppSelector((s) => s.batteryLifeApplication.cart);
 
   useEffect(() => {
-    let cancelled = false;
-    void getBatteryLifeCart().then((c) => {
-      if (!cancelled) setCart(c);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    void dispatch(fetchBatteryLifeApplicationCart());
+  }, [dispatch, isAuthenticated]);
 
-  const countLabel = cart != null && cart.items_count > 0 ? String(cart.items_count) : "";
+  const count = cart?.items_count ?? 0;
+  const hasDraft = Boolean(isAuthenticated && cart?.id != null && count > 0);
+
+  const inner = (
+    <>
+      <CartIcon />
+      <span className="cart-row__text">Типов в заявке: {count}</span>
+    </>
+  );
+
+  const rootClass = ["cart-row", className].filter(Boolean).join(" ");
+
+  if (hasDraft && cart?.id != null) {
+    return (
+      <div className={rootClass}>
+        <Link to={`/battery-life/${cart.id}`} className="cart-row__link">
+          {inner}
+        </Link>
+      </div>
+    );
+  }
 
   return (
-    <span
-      className="cart-button cart-button--disabled"
-      aria-label={
-        countLabel
-          ? `Shopping cart, ${countLabel} items — sign in to open the draft (guests cannot open the cart)`
-          : "Shopping cart — sign in to view or add items (guests cannot open the cart)"
-      }
-    >
-      <CartIcon />
-      <span className="cart-button__label">{countLabel}</span>
-    </span>
+    <div className={rootClass}>
+      <div className="cart-row__inactive">{inner}</div>
+    </div>
   );
 }

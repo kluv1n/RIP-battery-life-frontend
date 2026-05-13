@@ -1,3 +1,5 @@
+import { api } from "../api";
+
 /** Mock-типы услуг (тип аккумулятора) для лабораторной 5; по смыслу — как в лаб.1 + API курса. */
 
 export interface BatteryServiceMock {
@@ -140,7 +142,7 @@ function inferDetailMetrics(capacityMah: number): { currentAStr: string; runtime
   };
 }
 
-function normalizeBattery(
+export function normalizeBattery(
   raw: Partial<BatteryServiceMock> & { id?: number; photo?: string },
 ): BatteryServiceMock {
   const cap = raw.capacity_mah ?? 0;
@@ -166,15 +168,16 @@ function normalizeBattery(
 
 export async function listBatteryTypes(params?: { title?: string }): Promise<BatteryServiceMock[]> {
   try {
-    let path = "/api/battery_life_types";
+    let path = "/battery_life_types";
     if (params?.title?.trim()) {
       const q = new URLSearchParams();
       q.append("title", params.title.trim());
       path += `?${q.toString()}`;
     }
-    const res = await fetch(path, { headers: { Accept: "application/json" } });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = (await res.json()) as BatteryServiceMock[] | BatteryListAPIEnvelope;
+    const res = await api.instance.get<BatteryServiceMock[] | BatteryListAPIEnvelope>(path, {
+      headers: { Accept: "application/json" },
+    });
+    const json = res.data;
     if (Array.isArray(json)) {
       return json.map((item) => normalizeBattery(item));
     }
@@ -199,10 +202,10 @@ function unwrapBatteryTypePayload(
 
 export async function getBatteryType(id: number): Promise<BatteryServiceMock | null> {
   try {
-    const res = await fetch(`/api/battery_life_type/${id}`, { headers: { Accept: "application/json" } });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-    return normalizeBattery(unwrapBatteryTypePayload(json));
+    const res = await api.instance.get<unknown>(`/battery_life_type/${id}`, {
+      headers: { Accept: "application/json" },
+    });
+    return normalizeBattery(unwrapBatteryTypePayload(res.data));
   } catch {
     return null;
   }
@@ -233,12 +236,10 @@ function normalizeCartJson(raw: Record<string, unknown>): BatteryLifeCartJSON {
 
 export async function getBatteryLifeCart(): Promise<BatteryLifeCartJSON> {
   try {
-    const res = await fetch("/api/battery_life/battery_life-cart", {
+    const res = await api.instance.get<Record<string, unknown>>("/battery_life/battery_life-cart", {
       headers: { Accept: "application/json" },
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = (await res.json()) as Record<string, unknown>;
-    return normalizeCartJson(json);
+    return normalizeCartJson(res.data);
   } catch {
     return { has_draft: false, items_count: 0 };
   }
