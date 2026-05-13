@@ -10,6 +10,12 @@ import {
   type BatteryServiceMock,
 } from "../../modules/batteryApi";
 
+function detailMediaAlt(b: BatteryServiceMock): string {
+  const d = b.short_description?.trim();
+  if (!d) return b.title;
+  return `${b.title}. ${d.length > 160 ? `${d.slice(0, 157)}…` : d}`;
+}
+
 export default function ServicePage() {
   const [battery, setBattery] = useState<BatteryServiceMock | null>(null);
   const [mediaError, setMediaError] = useState(false);
@@ -72,7 +78,7 @@ export default function ServicePage() {
   if (!id || (!loading && !battery)) {
     return (
       <div className="space">
-        <p style={{ color: "var(--neter-text-muted)" }}>Услуга не найдена.</p>
+        <p style={{ color: "var(--neter-text-muted)" }}>Battery type not found.</p>
       </div>
     );
   }
@@ -80,7 +86,7 @@ export default function ServicePage() {
   if (loading || !battery) {
     return (
       <div className="space">
-        <p style={{ color: "var(--neter-text-muted)" }}>Загрузка...</p>
+        <p style={{ color: "var(--neter-text-muted)" }}>Loading…</p>
       </div>
     );
   }
@@ -92,11 +98,11 @@ export default function ServicePage() {
           type="text"
           name="query"
           className="search-input"
-          placeholder="Поиск по типу аккумулятора"
+          placeholder="Search by battery type"
           readOnly
           onFocus={() => navigate("/")}
         />
-        <button type="submit" className="search-btn" aria-label="Найти">
+        <button type="submit" className="search-btn" aria-label="Search">
           <svg className="search-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="11" cy="11" r="6" fill="none" stroke="currentColor" strokeWidth="2" />
             <path
@@ -117,7 +123,7 @@ export default function ServicePage() {
       <CatalogChrome toolbarForm={toolbarForm} />
       <div className="detail-wrapper detail-wrapper--battery">
         <Link to="/" className="back-link">
-          ← Вернуться к списку товаров
+          ← Back to catalog
         </Link>
         <div className="detail-card detail-card--split">
           <div className="detail-card__media">
@@ -125,7 +131,7 @@ export default function ServicePage() {
               className="detail-card__video-frame detail-card__video-frame--desc"
               tabIndex={0}
               role="region"
-              aria-label="Видео и описание по наведению"
+              aria-label="Video and summary overlay"
             >
               {showVideo ? (
                 <video
@@ -136,12 +142,13 @@ export default function ServicePage() {
                   loop
                   playsInline
                   poster={posterUrl}
+                  aria-label={detailMediaAlt(battery)}
                   onError={() => setMediaError(true)}
                 >
                   <source src={videoUrl} type="video/mp4" />
                 </video>
               ) : (
-                <img className="detail-card__video" src={posterUrl} alt={battery.title} />
+                <img className="detail-card__video" src={posterUrl} alt={detailMediaAlt(battery)} />
               )}
               <div className="detail-video-desc">
                 <div className="detail-video-desc__rail">
@@ -168,7 +175,7 @@ export default function ServicePage() {
                         <path d="M10 11h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                       </svg>
                       <span className="detail-stat__value">{battery.capacity_mah}</span>
-                      <span className="detail-stat__unit">мА·ч</span>
+                      <span className="detail-stat__unit">mAh</span>
                     </div>
                     <div className="detail-stat detail-stat--rail">
                       <svg className="detail-stat__icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -181,7 +188,7 @@ export default function ServicePage() {
                         />
                       </svg>
                       <span className="detail-stat__value">{battery.voltage_v.toFixed(1)}</span>
-                      <span className="detail-stat__unit">В</span>
+                      <span className="detail-stat__unit">V</span>
                     </div>
                   </div>
                 </div>
@@ -190,10 +197,10 @@ export default function ServicePage() {
                   <p className="detail-video-desc__short">{battery.short_description}</p>
                   <div className="detail-video-desc__metrics-text">
                     <p className="detail-video-desc__metric-row">
-                      <strong>Ток:</strong> {battery.detail_current_a_str} А
+                      <strong>Current:</strong> {battery.detail_current_a_str} A
                     </p>
                     <p className="detail-video-desc__metric-row">
-                      <strong>Время работы:</strong> {battery.detail_runtime_hours_str} ч
+                      <strong>Runtime:</strong> {battery.detail_runtime_hours_str} h
                     </p>
                   </div>
                 </div>

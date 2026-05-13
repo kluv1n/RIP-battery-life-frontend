@@ -17,8 +17,6 @@ export interface BatteryServiceMock {
   /** Строки как в battery.html: {{ .currentAStr }}, {{ .runtimeHoursStr }} */
   detail_current_a_str: string;
   detail_runtime_hours_str: string;
-  /** Короткое описание на английском для CLIP (50-100 символов). */
-  short_description_en?: string;
 }
 
 export interface BatteryLifeCartJSON {
@@ -69,20 +67,34 @@ export function fallbackImageUrl(): string {
   return (
     "data:image/svg+xml," +
     encodeURIComponent(
-      '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="100%" height="100%" fill="#d2dde4"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#0a3141" font-family="Manrope,Onest,sans-serif" font-size="15" font-weight="600">Нет фото</text></svg>',
+      '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="100%" height="100%" fill="#d2dde4"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#0a3141" font-family="Manrope,Onest,sans-serif" font-size="15" font-weight="600">No photo</text></svg>',
     )
   );
 }
 
+/** Полные URL MinIO на localhost:9000 → same-origin `/minio/...` (см. `vite.config` proxy). */
+function proxifyMinioDevUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    const port = u.port || (u.protocol === "https:" ? "443" : "80");
+    const isMinioDev =
+      (u.hostname === "localhost" || u.hostname === "127.0.0.1") && port === "9000";
+    if (isMinioDev) return `/minio${u.pathname}${u.search}`;
+  } catch {
+    /* ignore */
+  }
+  return url;
+}
+
 export function resolveMediaUrl(key: string): string {
   if (!key?.trim()) return fallbackImageUrl();
-  if (
-    key.startsWith("http://") ||
-    key.startsWith("https://") ||
-    key.startsWith("/") ||
-    key.startsWith("blob:") ||
-    key.startsWith("data:")
-  ) {
+  if (key.startsWith("blob:") || key.startsWith("data:")) {
+    return key;
+  }
+  if (key.startsWith("http://") || key.startsWith("https://")) {
+    return proxifyMinioDevUrl(key);
+  }
+  if (key.startsWith("/")) {
     return key;
   }
   const baseMinio = minioBase();
@@ -93,18 +105,23 @@ export function resolveMediaUrl(key: string): string {
 }
 
 function toEnglishClipDescription(input?: string): string {
-  const fallback = "Rechargeable battery for portable electronics and stable daily mobile operation.";
-  const text = (input?.trim() || fallback).replace(/\s+/g, " ");
-  if (text.length >= 50 && text.length <= 100) return text;
-  if (text.length < 50) return `${text} Works for mixed home and travel usage scenarios.`;
-  return text.slice(0, 100).trimEnd();
+  const fallback =
+    "Rechargeable lithium-based cell or pack with printed safety markings, welded tabs or leads, and clean studio lighting on a neutral background.";
+  let text = (input?.trim() || fallback).replace(/\s+/g, " ");
+  if (text.length < 80) {
+    text = `${text} Visible electrode geometry, shrink-wrap or plastic sleeve, and brand or capacity print typical of OEM battery photography.`;
+  }
+  if (text.length > 300) {
+    text = `${text.slice(0, 297).trimEnd()}...`;
+  }
+  return text;
 }
 
 export function batteryClipDescription(battery: BatteryServiceMock): string {
-  const ready = battery.short_description_en?.trim();
-  if (ready) return toEnglishClipDescription(ready);
+  const text = battery.short_description?.trim();
+  if (text) return toEnglishClipDescription(text);
   return toEnglishClipDescription(
-    `${battery.title} battery with ${battery.capacity_mah}mAh capacity for practical device power tasks.`,
+    `${battery.title} battery with ${battery.capacity_mah} mAh nameplate rating; cylindrical or prismatic metal housing and insulated conductor exits suitable for CLIP image–text matching.`,
   );
 }
 
@@ -112,9 +129,24 @@ type BatteryListAPIEnvelope = {
   items?: BatteryServiceMock[];
 };
 
+function inferDetailMetrics(capacityMah: number): { currentAStr: string; runtimeHStr: string } {
+  if (!capacityMah || capacityMah <= 0) return { currentAStr: "0.50", runtimeHStr: "0" };
+  const currentMa = Math.min(8000, Math.max(150, Math.round(capacityMah / 7)));
+  const hours = capacityMah / currentMa;
+  const a = currentMa / 1000;
+  return {
+    currentAStr: a >= 10 ? a.toFixed(1) : a.toFixed(2),
+    runtimeHStr: hours >= 100 ? hours.toFixed(0) : hours.toFixed(2),
+  };
+}
+
 function normalizeBattery(
   raw: Partial<BatteryServiceMock> & { id?: number; photo?: string },
 ): BatteryServiceMock {
+  const cap = raw.capacity_mah ?? 0;
+  const inferred = inferDetailMetrics(cap);
+  const cur = (raw.detail_current_a_str ?? "").trim();
+  const run = (raw.detail_runtime_hours_str ?? "").trim();
   return {
     battery_id: raw.battery_id ?? raw.id ?? 0,
     title: raw.title ?? "",
@@ -123,13 +155,12 @@ function normalizeBattery(
     is_deleted: Boolean(raw.is_deleted),
     photo_url: raw.photo_url ?? raw.photo ?? "",
     video: raw.video ?? "",
-    capacity_mah: raw.capacity_mah ?? 0,
+    capacity_mah: cap,
     voltage_v: raw.voltage_v ?? 0,
     price_rub: raw.price_rub ?? 0,
     listed_at: raw.listed_at ?? "",
-    detail_current_a_str: raw.detail_current_a_str ?? "",
-    detail_runtime_hours_str: raw.detail_runtime_hours_str ?? "",
-    short_description_en: raw.short_description_en,
+    detail_current_a_str: cur || inferred.currentAStr,
+    detail_runtime_hours_str: run || inferred.runtimeHStr,
   };
 }
 
@@ -153,15 +184,51 @@ export async function listBatteryTypes(params?: { title?: string }): Promise<Bat
   }
 }
 
+/** Составной ответ GET /battery_life_type/:id — как system_load + strategies, только battery_life + items. */
+function unwrapBatteryTypePayload(
+  json: unknown,
+): Partial<BatteryServiceMock> & { id?: number; photo?: string } {
+  if (!json || typeof json !== "object") return { id: 0 };
+  const o = json as Record<string, unknown>;
+  const inner = o.battery_type;
+  if (inner != null && typeof inner === "object") {
+    return inner as Partial<BatteryServiceMock> & { id?: number; photo?: string };
+  }
+  return json as Partial<BatteryServiceMock> & { id?: number; photo?: string };
+}
+
 export async function getBatteryType(id: number): Promise<BatteryServiceMock | null> {
   try {
     const res = await fetch(`/api/battery_life_type/${id}`, { headers: { Accept: "application/json" } });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = (await res.json()) as Partial<BatteryServiceMock> & { id?: number };
-    return normalizeBattery(json);
+    const json = await res.json();
+    return normalizeBattery(unwrapBatteryTypePayload(json));
   } catch {
     return null;
   }
+}
+
+/** Gin: `count` и `strategies_count` дублируют число позиций; без логина — `status: "no_draft"`. */
+function normalizeCartJson(raw: Record<string, unknown>): BatteryLifeCartJSON {
+  const n = (v: unknown) => (typeof v === "number" && !Number.isNaN(v) ? v : Number(v)) || 0;
+  const id = typeof raw.id === "number" ? raw.id : raw.id != null ? n(raw.id) : undefined;
+  const status = typeof raw.status === "string" ? raw.status : undefined;
+  const itemsCount = Math.max(
+    n(raw.items_count),
+    n(raw.count),
+    n(raw.strategies_count),
+  );
+  let hasDraft = typeof raw.has_draft === "boolean" ? raw.has_draft : undefined;
+  if (hasDraft === undefined) {
+    if (status === "no_draft") hasDraft = false;
+    else if (id != null && id > 0) hasDraft = true;
+    else hasDraft = itemsCount > 0;
+  }
+  return {
+    id: id && id > 0 ? id : undefined,
+    has_draft: Boolean(hasDraft),
+    items_count: itemsCount,
+  };
 }
 
 export async function getBatteryLifeCart(): Promise<BatteryLifeCartJSON> {
@@ -170,21 +237,8 @@ export async function getBatteryLifeCart(): Promise<BatteryLifeCartJSON> {
       headers: { Accept: "application/json" },
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = (await res.json()) as {
-      id?: number;
-      count?: number;
-      strategies_count?: number;
-      status?: string;
-      has_draft?: boolean;
-      items_count?: number;
-    };
-    const fromLegacy = json.items_count ?? json.count ?? json.strategies_count ?? 0;
-    const hasDraft = json.has_draft ?? (json.status !== "no_draft" && json.id != null);
-    return {
-      id: json.id,
-      has_draft: Boolean(hasDraft),
-      items_count: fromLegacy,
-    };
+    const json = (await res.json()) as Record<string, unknown>;
+    return normalizeCartJson(json);
   } catch {
     return { has_draft: false, items_count: 0 };
   }

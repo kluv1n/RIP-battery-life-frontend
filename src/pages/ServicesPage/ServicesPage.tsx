@@ -6,9 +6,7 @@ import ServicesList from "../../components/ServicesList/ServicesList";
 import { useBatteryImageSearch } from "../../hooks/useBatteryImageSearch";
 import {
   batteryClipDescription,
-  fallbackImageUrl,
   listBatteryTypes,
-  resolveMediaUrl,
   type BatteryServiceMock,
 } from "../../modules/batteryApi";
 import { BATTERIES_MOCK, filterMockBatteries, type BatteryFilters } from "../../modules/mock";
@@ -113,6 +111,70 @@ export default function ServicesPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const imageSearchActive = Boolean(imageEmbedding);
+  const showClipProgress = clipSessionActive && clipItems.length > 0 && !clipReady && !workerError;
+  const uploadLabel = clipSessionActive && !clipReady ? "Loading model…" : "Upload photo";
+  const isUploadDisabled = clipItems.length === 0 || (clipSessionActive && !clipReady);
+  const visibleClipRows = imageSearchActive ? clipProcessed.filter((item) => item.isVisible) : [];
+
+  const clipScoresMap = useMemo(() => {
+    if (!imageSearchActive) return undefined;
+    const m = new Map<number, number>();
+    for (const row of visibleClipRows) m.set(row.id, row.score);
+    return m;
+  }, [imageSearchActive, visibleClipRows]);
+
+  const displayBatteries = useMemo(() => {
+    if (!imageSearchActive) return batteries;
+    return visibleClipRows
+      .map((row) => batteryById.get(row.id))
+      .filter((b): b is BatteryServiceMock => b != null);
+  }, [imageSearchActive, batteries, visibleClipRows, batteryById]);
+
+  const toolbarLeading = (
+    <div className="catalog-photo-search" aria-label="Search similar batteries by photo">
+      <input
+        type="file"
+        accept="image/*"
+        ref={fileInputRef}
+        className="catalog-toolbar-row__file-input"
+        onChange={handleImageUpload}
+      />
+      <button
+        type="button"
+        className="cart-button"
+        onClick={handleUploadButtonClick}
+        disabled={isUploadDisabled}
+      >
+        {uploadLabel}
+      </button>
+      <Button
+        type="button"
+        variant="outline-secondary"
+        className="catalog-toolbar-row__btn-secondary"
+        onClick={handleClearImage}
+        disabled={!selectedImage}
+      >
+        Reset
+      </Button>
+      {showClipProgress ? (
+        <ProgressBar
+          className="catalog-toolbar-row__progress"
+          now={clipProgress}
+          label={`${Math.round(clipProgress)}%`}
+          animated
+        />
+      ) : null}
+      {selectedImage ? (
+        <img
+          className="catalog-toolbar-row__thumb"
+          src={selectedImage}
+          alt="Uploaded query image"
+        />
+      ) : null}
+    </div>
+  );
+
   const toolbarForm = (
     <ServicesFilterBar
       query={filters.title}
@@ -121,86 +183,24 @@ export default function ServicesPage() {
     />
   );
 
-  const imageSearchActive = Boolean(imageEmbedding);
-  const showClipProgress = clipSessionActive && clipItems.length > 0 && !clipReady && !workerError;
-  const uploadLabel = clipSessionActive && !clipReady ? "Загрузка нейросети..." : "Загрузить фото";
-  const isUploadDisabled = clipItems.length === 0 || (clipSessionActive && !clipReady);
-  const visibleClipRows = imageSearchActive ? clipProcessed.filter((item) => item.isVisible) : [];
+  const emptyMessage = imageSearchActive
+    ? "No battery types loaded for photo search."
+    : "No battery types match the current filters.";
 
   return (
     <>
-      <CatalogChrome toolbarForm={toolbarForm} />
+      <CatalogChrome toolbarLeading={toolbarLeading} toolbarForm={toolbarForm} />
       <div className="space">
-        <section className="clip-search" aria-labelledby="clip-search-title">
-          <h3 id="clip-search-title" className="clip-search__title">
-            Поиск похожих аккумуляторов по фото (CLIP)
-          </h3>
-          {workerError ? <Alert variant="warning">Ошибка CLIP: {workerError}</Alert> : null}
-          <input
-            type="file"
-            accept="image/*"
-            ref={fileInputRef}
-            className="clip-search__input"
-            onChange={handleImageUpload}
-          />
-          <div className="clip-search__controls">
-            <button
-              type="button"
-              className="cart-button clip-search__btn"
-              onClick={handleUploadButtonClick}
-              disabled={isUploadDisabled}
-            >
-              {uploadLabel}
-            </button>
-            <Button
-              type="button"
-              variant="outline-secondary"
-              className="clip-search__btn clip-search__btn--secondary"
-              onClick={handleClearImage}
-              disabled={!selectedImage}
-            >
-              Сбросить
-            </Button>
-          </div>
-          {showClipProgress ? (
-            <ProgressBar
-              className="clip-search__progress"
-              now={clipProgress}
-              label={`${Math.round(clipProgress)}%`}
-              animated
-            />
-          ) : null}
-          {selectedImage ? (
-            <img className="clip-search__preview" src={selectedImage} alt="Загруженное изображение для поиска" />
-          ) : null}
-        </section>
-
-        <h2 className="section-title">Типы аккумуляторов</h2>
+        {workerError ? <Alert variant="warning">Photo search error: {workerError}</Alert> : null}
+        <h2 className="section-title">Battery types</h2>
         {loading ? (
           <div className="services-loading">
-            <Spinner animation="border" role="status" aria-label="Загрузка" />
+            <Spinner animation="border" role="status" aria-label="Loading" />
           </div>
-        ) : imageSearchActive ? (
-          <ul className="clip-results-list">
-            {visibleClipRows.map((item) => {
-              const battery = batteryById.get(item.id);
-              if (!battery) return null;
-              return (
-                <li key={item.id} className="clip-results-list__item">
-                  <img src={resolveMediaUrl(battery.photo_url) || fallbackImageUrl()} alt="" />
-                  <div>
-                    <strong>{battery.title}</strong>
-                    <p>{item.description}</p>
-                    <p>Сходство: {(item.score * 100).toFixed(1)}%</p>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        ) : batteries.length > 0 ? (
-          <ServicesList batteries={batteries} />
+        ) : displayBatteries.length > 0 ? (
+          <ServicesList batteries={displayBatteries} clipScores={clipScoresMap} />
         ) : (
-          <p style={{ color: "var(--neter-text-muted)" }}>По заданным фильтрам услуги не найдены.</p>
+          <p style={{ color: "var(--neter-text-muted)" }}>{emptyMessage}</p>
         )}
       </div>
     </>

@@ -107,25 +107,15 @@ export function useBatteryImageSearch(initialItems: ClipSearchItem[], enabled: b
     if (!imageEmbedding) return;
     setItems((prevItems) => {
       if (!prevItems[0]?.embedding) return prevItems;
-      const threshold = 0.55;
-      const topK = 5;
       const processed = prevItems.map((item) => {
-        if (!item.embedding) return item;
-        return { ...item, score: cosineSimilarity(imageEmbedding, item.embedding), isVisible: false };
+        if (!item.embedding) return { ...item, score: 0, isVisible: true };
+        return {
+          ...item,
+          score: cosineSimilarity(imageEmbedding, item.embedding),
+          isVisible: true,
+        };
       });
       processed.sort((a, b) => b.score - a.score);
-
-      let visible = 0;
-      for (const item of processed) {
-        if (visible >= topK) break;
-        if (item.score >= threshold) {
-          item.isVisible = true;
-          visible += 1;
-        }
-      }
-      if (visible === 0) {
-        for (const item of processed.slice(0, topK)) item.isVisible = true;
-      }
       return processed;
     });
   }, [imageEmbedding]);

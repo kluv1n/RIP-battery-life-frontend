@@ -7,7 +7,7 @@ export const ROUTES = {
 export type RouteKeyType = keyof typeof ROUTES;
 
 export const ROUTE_LABELS: { [key in RouteKeyType]: string } = {
-  SERVICES: "Каталог услуг",
-  SERVICE: "Услуга",
-  BATTERY_LIFE: "Заявка",
+  SERVICES: "Battery catalog",
+  SERVICE: "Battery type",
+  BATTERY_LIFE: "Runtime request",
 };

@@ -4,81 +4,81 @@ import type {
   BatteryServiceMock,
 } from "./batteryApi";
 
-/** Видео: Mixkit, набор батарейных элементов (крупный план, 360p). */
+/** Video: Mixkit battery B-roll (360p). */
 export const MOCK_VIDEO = "/mock/battery-default.mp4";
 
-/** Обложка: фото с аккумулятором/зарядкой (Unsplash → `public/mock/battery-default.jpg`). */
+/** Poster: batteries / charger (Unsplash → `public/mock/battery-default.jpg`). */
 export const MOCK_COVER = "/mock/battery-default.jpg";
 
-/** Четыре услуги; вёрстка карточек как в templates/index.html */
+/** Four catalog items; card layout matches templates/index.html */
 export const BATTERIES_MOCK: BatteryServiceMock[] = [
   {
     battery_id: 1,
     is_deleted: false,
     title: "Li-ion 18650",
-    short_description: "Универсальный цилиндр 18650 для powerbank и ноутбуков.",
+    short_description:
+      "A purple 18650-format cylindrical lithium-ion cell standing upright on a neutral gray sweep; the flat positive terminal shows a shallow vent disk and nickel plating, the negative end is wrapped in heat-shrink with printed mAh and safety glyphs, soft three-quarter studio lighting with gentle falloff and no harsh specular hotspots—typical OEM catalog photo for CLIP-style image retrieval.",
     description:
-      "Цилиндрический литий-ионный элемент 18650. Часто используется в powerbank, ноутбуках и переносной электронике.",
+      "Цилиндрический литий-ионный элемент формата 18650: компактная стандартизированная геометрия 18×65 мм, высокая удельная энергия, низкий саморазряд при хранении. Применяется в powerbank, ноутбучных батареях, электроинструменте и DIY-сборках; требует BMS или защищённых каналов заряда, рабочий диапазон напряжений обычно 2.5–4.2 В на ячейку.",
     photo_url: MOCK_COVER,
     video: MOCK_VIDEO,
     capacity_mah: 3500,
     voltage_v: 3.7,
     price_rub: 890,
     listed_at: "2026-01-10T12:00:00.000Z",
-    detail_current_a_str: "0,45",
-    detail_runtime_hours_str: "12,40",
-    short_description_en: "Universal 18650 Li-ion cell for laptops, power banks, and compact backup packs.",
+    detail_current_a_str: "0.45",
+    detail_runtime_hours_str: "12.40",
   },
   {
     battery_id: 2,
     is_deleted: false,
-    title: "Li-Po пакет",
-    short_description: "Плоский полимерный элемент для компактных устройств.",
-    description: "Полимерно-литиевый пакет: компактная форма для носимых устройств и дронов.",
+    title: "Li-Po pack",
+    short_description:
+      "A thin rectangular soft-pouch lithium-polymer battery in matte gray foil laminate; two flexible silicone leads—red positive and black negative—exit one short edge through reinforced tape, JST-style connector optional, slight pillowing of the foil edges and barcode sticker on top, even diffused light emphasizing the flat prismatic silhouette for vision-language matching.",
+    description:
+      "Полимерно-литиевый (Li-Po) пакет: гибкая плоская конструкция в алюмоламинатной оболочке, лёгкий вес и произвольные габариты под корпус смартфона, дрона или VR-шлема. Чувствителен к механическим проколам и перегреву; хранить частично заряженным, использовать только с корректным зарядным профилем CC/CV.",
     photo_url: MOCK_COVER,
     video: MOCK_VIDEO,
     capacity_mah: 5000,
     voltage_v: 3.85,
     price_rub: 1240,
     listed_at: "2026-02-05T09:00:00.000Z",
-    detail_current_a_str: "0,80",
-    detail_runtime_hours_str: "5,20",
-    short_description_en:
-      "Flat lithium-polymer battery for drones and wearables with lightweight compact form.",
+    detail_current_a_str: "0.80",
+    detail_runtime_hours_str: "5.20",
   },
   {
     battery_id: 3,
     is_deleted: false,
-    title: "LiFePO₄ блок",
-    short_description: "Безопасная химия для стационарных и транспортных систем.",
-    description: "Литий-железо-фосфатный аккумуляторный блок: безопасность и долгий ресурс циклов.",
+    title: "LiFePO4 block",
+    short_description:
+      "A heavy prismatic LiFePO4 module with powder-coated metal case corners, two prominent busbar screw terminals capped with plastic shrouds, blue branded shrink on the long face, and thick red/black AWG cables routed to a small BMS harness with balance leads—stationary energy-storage look, front-three-quarter product shot on concrete-toned backdrop.",
+    description:
+      "Литий-железо-фосфатный (LiFePO₄) блок: стабильная химия с плоской кривой разряда, высокая термостойкость и тысячи циклов при умеренной глубине разряда. Подходит для солнечных кэшей, ИБП и электротранспорта; номинальное напряжение ячейки около 3,2 В, сборки часто 4S/8S/16S под 12/24/48 В шины.",
     photo_url: MOCK_COVER,
     video: MOCK_VIDEO,
     capacity_mah: 100_000,
     voltage_v: 12.8,
     price_rub: 42_500,
     listed_at: "2026-01-22T15:30:00.000Z",
-    detail_current_a_str: "2,50",
-    detail_runtime_hours_str: "36,00",
-    short_description_en:
-      "LiFePO4 battery block for transport and stationary systems with high cycle safety life.",
+    detail_current_a_str: "2.50",
+    detail_runtime_hours_str: "36.00",
   },
   {
     battery_id: 4,
     is_deleted: false,
     title: "Ni-MH AA",
-    short_description: "Формат AA, 1.2 В — пульты, фонари, бытовая электроника.",
-    description: "Никель-металлгидридный элемент формата AA: 1.2 В, удобен для пультов и фонарей.",
+    short_description:
+      "Four consumer AA nickel-metal hydride cells arranged in a loose diagonal row on pure white; metallic negative bottoms, green printed sleeves with mAh ratings and crossed-bin recycling icons, mild specular highlights on the steel rings—common household rechargeable pack reference for image search.",
+    description:
+      "Никель-металлгидридные (Ni-MH) элементы формата AA: номинал 1,2 В на ячейку, безопаснее лития при бытовом использовании, удобны для пультов, детских игрушек и фонарей. Память эффекта слабее старых Ni-Cd; лучше не перегревать при заряде и избегать глубокого переразряда в дешёвых зарядках без −ΔV или dT/dt контроля.",
     photo_url: MOCK_COVER,
     video: MOCK_VIDEO,
     capacity_mah: 2500,
     voltage_v: 1.2,
     price_rub: 320,
     listed_at: "2025-12-18T11:00:00.000Z",
-    detail_current_a_str: "0,12",
-    detail_runtime_hours_str: "18,50",
-    short_description_en:
-      "Nickel-metal hydride AA battery for remotes and flashlights with reliable daily charge.",
+    detail_current_a_str: "0.12",
+    detail_runtime_hours_str: "18.50",
   },
 ];
 
@@ -102,8 +102,7 @@ export function filterMockBatteries(filters: BatteryFilters): BatteryServiceMock
   if (t) {
     list = list.filter(
       (b) =>
-        b.title.toLowerCase().includes(t) ||
-        b.short_description.toLowerCase().includes(t),
+        b.title.toLowerCase().includes(t) || b.short_description.toLowerCase().includes(t),
     );
   }
   return list;
@@ -132,7 +131,7 @@ function cloneBattery(b: BatteryServiceMock): BatteryServiceMock {
 export const MOCK_BATTERY_LIFE_DETAIL: BatteryLifeDetailResponse = {
   battery_life: {
     battery_life_id: 1,
-    title: "Демо-подборка",
+    title: "Demo bundle",
     status: "draft",
     created_at: new Date().toISOString(),
     creator_login: "guest",

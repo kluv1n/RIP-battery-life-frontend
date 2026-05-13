@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 export default function BatteryLifeHeader() {
   return (
     <header className="header-center">
-      <Link to="/" className="header-logo" aria-label="На главную">
+      <Link to="/" className="header-logo" aria-label="Home">
         <img src="/img/logo.svg" alt="НЭТЕР" className="header-logo__img" />
       </Link>
     </header>
