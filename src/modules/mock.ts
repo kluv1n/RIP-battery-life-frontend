@@ -131,12 +131,12 @@ function cloneBattery(b: BatteryServiceMock): BatteryServiceMock {
 export const MOCK_BATTERY_LIFE_DETAIL: BatteryLifeDetailResponse = {
   battery_life: {
     battery_life_id: 1,
-    title: "Demo bundle",
+    title: "",
     status: "draft",
     created_at: new Date().toISOString(),
     creator_login: "guest",
     moderator_login: null,
-    description: "Черновая заявка на расчёт времени работы (mock).",
+    description: null,
     completed_item_count: 0,
     total_runtime_hours: 30,
   },

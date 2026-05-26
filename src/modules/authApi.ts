@@ -2,7 +2,7 @@ import axios from "axios";
 
 const baseURL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
-/** Axios только для /users/* (без codegen). */
+/** Axios только для /users/* (без codegen). База URL как у основного API. */
 export const authAxios = axios.create({
   baseURL,
 });

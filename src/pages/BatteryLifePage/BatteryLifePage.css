@@ -21,3 +21,177 @@
   user-select: none;
   opacity: 0.85;
 }
+
+.battery-life-detail__theme-input-wrap {
+  position: relative;
+  border: 1px solid var(--neter-border);
+  border-radius: 8px;
+  background: var(--neter-white);
+}
+
+.battery-life-detail__theme-hint {
+  position: absolute;
+  inset: 1px 1px auto 1px;
+  z-index: 1;
+  padding: 8px 12px;
+  pointer-events: none;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--neter-text-muted);
+  opacity: 0.75;
+  white-space: pre-wrap;
+}
+
+.battery-life-detail__theme-field {
+  position: relative;
+  z-index: 2;
+  resize: vertical;
+  min-height: 52px;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.battery-life-detail__theme-field--empty {
+  background: transparent !important;
+}
+
+.battery-life-detail__theme-field:not(.battery-life-detail__theme-field--empty) {
+  background: var(--neter-white) !important;
+}
+
+.battery-life-detail__theme-readonly {
+  min-height: 52px;
+  padding: 8px 12px;
+  border: 1px solid var(--neter-border);
+  border-radius: 8px;
+  background: var(--neter-card-bg);
+  color: var(--neter-text);
+  white-space: pre-wrap;
+}
+
+/* Компактные строки позиций: заголовки один раз, результат в колонках */
+.battery-life-items-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.battery-life-items-table__head,
+.battery-life-item-row {
+  display: grid;
+  grid-template-columns: 56px minmax(120px, 1.4fr) minmax(100px, 1fr) 88px 72px 80px 80px;
+  gap: 10px 12px;
+  align-items: center;
+}
+
+.battery-life-items-table__head--draft,
+.battery-life-item-row--draft {
+  grid-template-columns: 56px minmax(120px, 1.4fr) minmax(100px, 1fr) 88px 72px 80px 80px minmax(140px, auto);
+}
+
+.battery-life-items-table__head {
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--neter-text-muted);
+  background: var(--neter-card-bg);
+  border: 1px solid var(--neter-border);
+  border-radius: 8px;
+}
+
+.battery-life-item-row {
+  min-height: 52px;
+  padding: 8px 12px;
+  background: var(--neter-white);
+  border: 1px solid var(--neter-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(10, 49, 65, 0.06);
+  font-size: 0.9rem;
+  color: var(--neter-text);
+}
+
+.battery-life-item-row__thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: var(--neter-border);
+}
+
+.battery-life-item-row__thumb--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: var(--neter-text-muted);
+}
+
+.battery-life-item-row__link {
+  font-weight: 600;
+  color: var(--icon-default);
+  text-decoration: none;
+}
+
+.battery-life-item-row__link:hover {
+  color: var(--neter-hover);
+  text-decoration: underline;
+}
+
+.battery-life-item-row__input {
+  max-width: 88px;
+  padding: 4px 8px;
+  font-size: 0.85rem;
+}
+
+.battery-life-item-row__result {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #1a8f4a;
+}
+
+.battery-life-items-table__col--actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+@media (max-width: 900px) {
+  .battery-life-items-table__head {
+    display: none;
+  }
+
+  .battery-life-item-row,
+  .battery-life-item-row--draft {
+    grid-template-columns: 48px 1fr;
+    grid-template-rows: auto;
+    gap: 6px;
+  }
+
+  .battery-life-items-table__col--spec::before {
+    content: "Ёмкость: ";
+    font-weight: 600;
+  }
+
+  .battery-life-items-table__col--current::before {
+    content: "Ток: ";
+    font-weight: 600;
+  }
+
+  .battery-life-items-table__col--qty::before {
+    content: "Кол-во: ";
+    font-weight: 600;
+  }
+
+  .battery-life-items-table__col--unit::before {
+    content: "На ед., ч: ";
+    font-weight: 600;
+  }
+
+  .battery-life-items-table__col--total::before {
+    content: "По поз., ч: ";
+    font-weight: 600;
+  }
+}

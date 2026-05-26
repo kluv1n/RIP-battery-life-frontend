@@ -1,69 +1,37 @@
-import { api } from "../api";
+import axios from "axios";
+import type { BatteryServiceMock } from "./batteryApi.types";
 
-/** Mock-типы услуг (тип аккумулятора) для лабораторной 5; по смыслу — как в лаб.1 + API курса. */
+export type {
+  BatteryLifeCartJSON,
+  BatteryLifeDetailResponse,
+  BatteryLifeHeaderMock,
+  BatteryLifeItemDetailJSON,
+  BatteryServiceMock,
+} from "./batteryApi.types";
 
-export interface BatteryServiceMock {
-  battery_id: number;
-  title: string;
-  short_description: string;
-  description: string;
-  is_deleted: boolean;
-  /** Как в шаблоне: имя файла в MinIO или полный URL; при пустом — заглушка. */
-  photo_url: string;
-  video: string;
-  capacity_mah: number;
-  voltage_v: number;
-  /** Только для фильтров лаб.5 (в карточке каталога не выводится — как в index.html). */
-  price_rub: number;
-  listed_at: string;
-  /** Строки как в battery.html: {{ .currentAStr }}, {{ .runtimeHoursStr }} */
-  detail_current_a_str: string;
-  detail_runtime_hours_str: string;
-}
+const baseURL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
-export interface BatteryLifeCartJSON {
-  id?: number;
-  has_draft: boolean;
-  items_count: number;
-}
+/** Список и карточка типов АКБ (услуги): только axios, без swagger-клиента. */
+export const batteryTypesAxios = axios.create({
+  baseURL,
+});
 
-export interface BatteryLifeHeaderMock {
-  battery_life_id: number;
-  title: string;
-  status: string;
-  created_at: string;
-  creator_login: string;
-  moderator_login?: string | null;
-  description?: string | null;
-  completed_item_count: number;
-  total_runtime_hours: number;
-}
+batteryTypesAxios.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
-export interface BatteryLifeItemDetailJSON {
-  battery_life_id: number;
-  battery_id: number;
-  current_ma: number;
-  quantity: number;
-  runtime_hours: number | null;
-  battery: BatteryServiceMock;
-}
-
-export interface BatteryLifeDetailResponse {
-  battery_life: BatteryLifeHeaderMock;
-  items: BatteryLifeItemDetailJSON[];
-}
-
-function minioBase(): string {
-  const raw = import.meta.env.VITE_MINIO_BASE as string | undefined;
-  return raw?.replace(/\/$/, "") ?? "";
-}
-
-/** Как в Gin-шаблоне: http://localhost:9000/test/… */
-function mediaBase(): string {
-  const raw = import.meta.env.VITE_MEDIA_BASE as string | undefined;
-  if (raw?.trim()) return raw.replace(/\/$/, "");
-  return "http://localhost:9000/test";
-}
+/**
+ * Ключи MinIO (не http/https/blob/data).
+ * В dev — proxy Vite `/minio` → localhost:9000 (см. vite.config.ts).
+ */
+const MINIO_PUBLIC_BASE =
+  (import.meta.env.VITE_MINIO_BASE?.replace(/\/$/, "") as string | undefined) ??
+  (import.meta.env.VITE_MEDIA_BASE?.replace(/\/$/, "") as string | undefined) ??
+  (import.meta.env.DEV ? "/minio/test" : "http://localhost:9000/test");
 
 export function fallbackImageUrl(): string {
   return (
@@ -74,7 +42,6 @@ export function fallbackImageUrl(): string {
   );
 }
 
-/** Полные URL MinIO на localhost:9000 → same-origin `/minio/...` (см. `vite.config` proxy). */
 function proxifyMinioDevUrl(url: string): string {
   try {
     const u = new URL(url);
@@ -90,20 +57,16 @@ function proxifyMinioDevUrl(url: string): string {
 
 export function resolveMediaUrl(key: string): string {
   if (!key?.trim()) return fallbackImageUrl();
-  if (key.startsWith("blob:") || key.startsWith("data:")) {
-    return key;
+  if (
+    key.startsWith("http://") ||
+    key.startsWith("https://") ||
+    key.startsWith("/") ||
+    key.startsWith("blob:") ||
+    key.startsWith("data:")
+  ) {
+    return key.startsWith("http") ? proxifyMinioDevUrl(key) : key;
   }
-  if (key.startsWith("http://") || key.startsWith("https://")) {
-    return proxifyMinioDevUrl(key);
-  }
-  if (key.startsWith("/")) {
-    return key;
-  }
-  const baseMinio = minioBase();
-  if (baseMinio) {
-    return `${baseMinio}/${key.replace(/^\//, "")}`;
-  }
-  return `${mediaBase()}/${key.replace(/^\//, "")}`;
+  return `${MINIO_PUBLIC_BASE}/${key.replace(/^\//, "")}`;
 }
 
 function toEnglishClipDescription(input?: string): string {
@@ -166,28 +129,6 @@ export function normalizeBattery(
   };
 }
 
-export async function listBatteryTypes(params?: { title?: string }): Promise<BatteryServiceMock[]> {
-  try {
-    let path = "/battery_life_types";
-    if (params?.title?.trim()) {
-      const q = new URLSearchParams();
-      q.append("title", params.title.trim());
-      path += `?${q.toString()}`;
-    }
-    const res = await api.instance.get<BatteryServiceMock[] | BatteryListAPIEnvelope>(path, {
-      headers: { Accept: "application/json" },
-    });
-    const json = res.data;
-    if (Array.isArray(json)) {
-      return json.map((item) => normalizeBattery(item));
-    }
-    return (json.items ?? []).map((item) => normalizeBattery(item));
-  } catch {
-    return [];
-  }
-}
-
-/** Составной ответ GET /battery_life_type/:id — как system_load + strategies, только battery_life + items. */
 function unwrapBatteryTypePayload(
   json: unknown,
 ): Partial<BatteryServiceMock> & { id?: number; photo?: string } {
@@ -200,47 +141,36 @@ function unwrapBatteryTypePayload(
   return json as Partial<BatteryServiceMock> & { id?: number; photo?: string };
 }
 
+function mapListResponse(data: BatteryServiceMock[] | BatteryListAPIEnvelope | undefined): BatteryServiceMock[] {
+  if (!data) return [];
+  if (Array.isArray(data)) {
+    return data.map((item) => normalizeBattery(item));
+  }
+  return (data.items ?? []).map((item) => normalizeBattery(item));
+}
+
+export async function listBatteryTypes(params?: { title?: string }): Promise<BatteryServiceMock[]> {
+  try {
+    const r = await batteryTypesAxios.get<BatteryServiceMock[] | BatteryListAPIEnvelope>(
+      "/battery_life_types",
+      {
+        params: params?.title ? { title: params.title } : undefined,
+        headers: { Accept: "application/json" },
+      },
+    );
+    return mapListResponse(r.data);
+  } catch {
+    return [];
+  }
+}
+
 export async function getBatteryType(id: number): Promise<BatteryServiceMock | null> {
   try {
-    const res = await api.instance.get<unknown>(`/battery_life_type/${id}`, {
+    const r = await batteryTypesAxios.get<unknown>(`/battery_life_type/${id}`, {
       headers: { Accept: "application/json" },
     });
-    return normalizeBattery(unwrapBatteryTypePayload(res.data));
+    return normalizeBattery(unwrapBatteryTypePayload(r.data));
   } catch {
     return null;
-  }
-}
-
-/** Gin: `count` и `strategies_count` дублируют число позиций; без логина — `status: "no_draft"`. */
-function normalizeCartJson(raw: Record<string, unknown>): BatteryLifeCartJSON {
-  const n = (v: unknown) => (typeof v === "number" && !Number.isNaN(v) ? v : Number(v)) || 0;
-  const id = typeof raw.id === "number" ? raw.id : raw.id != null ? n(raw.id) : undefined;
-  const status = typeof raw.status === "string" ? raw.status : undefined;
-  const itemsCount = Math.max(
-    n(raw.items_count),
-    n(raw.count),
-    n(raw.strategies_count),
-  );
-  let hasDraft = typeof raw.has_draft === "boolean" ? raw.has_draft : undefined;
-  if (hasDraft === undefined) {
-    if (status === "no_draft") hasDraft = false;
-    else if (id != null && id > 0) hasDraft = true;
-    else hasDraft = itemsCount > 0;
-  }
-  return {
-    id: id && id > 0 ? id : undefined,
-    has_draft: Boolean(hasDraft),
-    items_count: itemsCount,
-  };
-}
-
-export async function getBatteryLifeCart(): Promise<BatteryLifeCartJSON> {
-  try {
-    const res = await api.instance.get<Record<string, unknown>>("/battery_life/battery_life-cart", {
-      headers: { Accept: "application/json" },
-    });
-    return normalizeCartJson(res.data);
-  } catch {
-    return { has_draft: false, items_count: 0 };
   }
 }

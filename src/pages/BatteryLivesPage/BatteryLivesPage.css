@@ -14,6 +14,25 @@
   color: var(--neter-text);
 }
 
+.battery-lives-page__summary {
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+  color: var(--neter-text-muted);
+}
+
+.battery-lives-page__summary strong {
+  color: var(--neter-text);
+}
+
+.battery-lives-page__table {
+  font-size: 0.9rem;
+}
+
+.battery-lives-page__result--filled {
+  font-weight: 700;
+  color: #1a8f4a;
+}
+
 .battery-lives-page__filters {
   background: var(--neter-card-bg);
   border: 1px solid var(--neter-border);

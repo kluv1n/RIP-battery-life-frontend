@@ -16,6 +16,7 @@ import { logoutUser } from "./userSlice";
 
 export interface BatteryLifeListRow {
   battery_life_id: number;
+  title: string;
   status: string;
   created_at: string;
   creator_login: string;
@@ -29,6 +30,7 @@ export interface BatteryLifeListRow {
 function mapListRow(sl: SerializerBatteryLifeJSON): BatteryLifeListRow {
   return {
     battery_life_id: Number(sl.id ?? 0),
+    title: String(sl.title ?? ""),
     status: sl.status ?? "",
     created_at: sl.created_at != null ? String(sl.created_at) : "",
     creator_login: sl.creator_login ?? "",

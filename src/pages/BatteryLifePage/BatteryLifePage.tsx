@@ -25,6 +25,8 @@ import "./BatteryLifePage.css";
 
 type RowDraft = Pick<BatteryLifeItemDetailJSON, "current_ma" | "quantity">;
 
+const THEME_PLACEHOLDER = "Кратко укажите тему или сценарий эксплуатации набора АКБ";
+
 export default function BatteryLifePage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -35,7 +37,6 @@ export default function BatteryLifePage() {
 
   const [mockData, setMockData] = useState<BatteryLifeDetailResponse | null>(null);
   const [titleDraft, setTitleDraft] = useState("");
-  const [descriptionDraft, setDescriptionDraft] = useState("");
   const [rowDrafts, setRowDrafts] = useState<Record<number, RowDraft>>({});
 
   const reloadMock = useCallback(() => {
@@ -69,7 +70,6 @@ export default function BatteryLifePage() {
   useEffect(() => {
     if (!data) return;
     setTitleDraft(data.battery_life.title || "");
-    setDescriptionDraft(data.battery_life.description ?? "");
     const next: Record<number, RowDraft> = {};
     data.items.forEach((row) => {
       next[row.battery_id] = {
@@ -85,7 +85,7 @@ export default function BatteryLifePage() {
   const statusNorm = (life?.status ?? "").trim().toLowerCase();
   const isDraft = statusNorm === "draft" || statusNorm === "черновик";
   const busy = applicationMutationLoading || detailLoading;
-  const headerPlaintext = !isDraft && !mockData;
+  const themeEditable = isDraft && !mockData;
 
   const updateRowDraft = useCallback((batteryTypeId: number, patch: Partial<RowDraft>) => {
     setRowDrafts((prev) => {
@@ -103,7 +103,7 @@ export default function BatteryLifePage() {
     void dispatch(
       updateBatteryLifeApplicationDraft({
         applicationId,
-        body: { title: titleDraft, description: descriptionDraft },
+        body: { title: titleDraft, description: "" },
       }),
     );
   };
@@ -188,7 +188,7 @@ export default function BatteryLifePage() {
           ← К каталогу
         </Link>
         <div className="battery-life-detail__header-card">
-          <h1 className="battery-life-detail__title">Заявка № {applicationId}</h1>
+          <h1 className="battery-life-detail__title">Заявка на расчёт времени работы АКБ</h1>
           <div className="battery-life-detail__info">
             <div className="battery-life-detail__info-item">
               <strong>ID заявки:</strong> {applicationId}
@@ -209,30 +209,33 @@ export default function BatteryLifePage() {
             ) : null}
           </div>
 
-          <Form.Group className="mb-2 mt-2" controlId="bl-title">
-            <Form.Label>Название</Form.Label>
-            <Form.Control
-              type="text"
-              value={titleDraft}
-              onChange={(e) => setTitleDraft(e.target.value)}
-              readOnly={!isDraft || Boolean(mockData)}
-              plaintext={headerPlaintext}
-            />
-          </Form.Group>
-          <Form.Group className="mb-2" controlId="bl-desc">
-            <Form.Label>Описание</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={2}
-              value={descriptionDraft}
-              onChange={(e) => setDescriptionDraft(e.target.value)}
-              readOnly={!isDraft || Boolean(mockData)}
-              plaintext={headerPlaintext}
-            />
+          <Form.Group className="mb-2 mt-2 battery-life-detail__theme" controlId="bl-theme">
+            <Form.Label>Тема заявки</Form.Label>
+            {themeEditable ? (
+              <div className="battery-life-detail__theme-input-wrap">
+                {titleDraft.length === 0 ? (
+                  <span className="battery-life-detail__theme-hint" aria-hidden>
+                    {THEME_PLACEHOLDER}
+                  </span>
+                ) : null}
+                <Form.Control
+                  as="textarea"
+                  rows={2}
+                  className={`battery-life-detail__theme-field${titleDraft.length === 0 ? " battery-life-detail__theme-field--empty" : ""}`}
+                  value={titleDraft}
+                  onChange={(e) => setTitleDraft(e.target.value)}
+                  aria-label="Тема заявки"
+                />
+              </div>
+            ) : (
+              <div className="battery-life-detail__theme-readonly">
+                {titleDraft.trim() ? titleDraft : "—"}
+              </div>
+            )}
           </Form.Group>
           {isDraft && !mockData ? (
-            <Button variant="primary" size="sm" className="me-2" onClick={handleSaveHeader} disabled={busy}>
-              Сохранить заголовок
+            <Button variant="outline-primary" size="sm" className="me-2" onClick={handleSaveHeader} disabled={busy}>
+              Сохранить тему заявки
             </Button>
           ) : null}
 
@@ -259,8 +262,8 @@ export default function BatteryLifePage() {
 
         {isDraft && !mockData ? (
           <p className="battery-life-detail__hint small text-muted mb-3">
-            Доступны действия с заявкой и её строками: сохранение названия и описания, сохранение строк
-            таблицы, удаление строки, сформировать заявку и удалить черновик.
+            Доступны действия с заявкой и её строками: сохранение темы заявки, сохранение строк,
+            удаление строки, сформировать заявку и удалить черновик.
           </p>
         ) : !isDraft ? (
           <p className="battery-life-detail__hint small text-muted mb-3">
@@ -281,11 +284,41 @@ export default function BatteryLifePage() {
         ) : null}
 
         <h2 className="battery-life-detail__section-title">Позиции в заявке</h2>
-        <div className="battery-life-items">
+        <div className="battery-life-items-table">
+          <div
+            className={`battery-life-items-table__head${isDraft && !mockData ? " battery-life-items-table__head--draft" : ""}`}
+            aria-hidden
+          >
+            <span className="battery-life-items-table__col battery-life-items-table__col--photo">
+              Фото
+            </span>
+            <span className="battery-life-items-table__col battery-life-items-table__col--title">
+              Тип АКБ
+            </span>
+            <span className="battery-life-items-table__col battery-life-items-table__col--spec">
+              Ёмкость
+            </span>
+            <span className="battery-life-items-table__col battery-life-items-table__col--current">
+              Ток, мА
+            </span>
+            <span className="battery-life-items-table__col battery-life-items-table__col--qty">
+              Кол-во
+            </span>
+            <span className="battery-life-items-table__col battery-life-items-table__col--unit">
+              Результат, ч (ед.)
+            </span>
+            <span className="battery-life-items-table__col battery-life-items-table__col--total">
+              Результат, ч (поз.)
+            </span>
+            {isDraft && !mockData ? (
+              <span className="battery-life-items-table__col battery-life-items-table__col--actions">
+                Действия
+              </span>
+            ) : null}
+          </div>
           {data.items.map((row: BatteryLifeItemDetailJSON) => {
             const hasPhoto = Boolean(row.battery.photo_url?.trim());
             const photoSrcUrl = hasPhoto ? resolveMediaUrl(row.battery.photo_url) : "";
-            const hasVideo = Boolean(row.battery.video?.trim());
             const runtimeTotal = (row.runtime_hours ?? 0) * row.quantity;
             const draft = rowDrafts[row.battery_id];
             const lineBusy = lineBusyKey(row.battery_id);
@@ -293,103 +326,90 @@ export default function BatteryLifePage() {
             return (
               <article
                 key={`${row.battery_life_id}-${row.battery_id}`}
-                className="battery-life-item-card"
+                className={`battery-life-item-row${isDraft && !mockData ? " battery-life-item-row--draft" : ""}`}
               >
-                <div className="battery-life-item-card__media">
+                <div className="battery-life-items-table__col battery-life-items-table__col--photo">
                   {hasPhoto ? (
                     <img
-                      className="battery-life-item-card__photo"
+                      className="battery-life-item-row__thumb"
                       src={photoSrcUrl}
-                      alt={row.battery.title}
+                      alt=""
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = fallbackImageUrl();
                       }}
                     />
                   ) : (
-                    <div className="battery-life-item-card__photo battery-life-item-card__photo--placeholder">
-                      Нет фото
-                    </div>
-                  )}
-                  {hasVideo ? (
-                    <div className="battery-life-item-card__video-block">
-                      <video className="battery-life-item-card__video" controls muted playsInline preload="metadata">
-                        <source src={resolveMediaUrl(row.battery.video)} type="video/mp4" />
-                      </video>
-                    </div>
-                  ) : (
-                    <div className="battery-life-item-card__video-block battery-life-item-card__video-block--empty">
-                      Видео не указано
+                    <div className="battery-life-item-row__thumb battery-life-item-row__thumb--empty">
+                      —
                     </div>
                   )}
                 </div>
-                <div className="battery-life-item-card__body">
-                  <h3 className="battery-life-item-card__title">{row.battery.title}</h3>
-                  <p className="battery-life-item-card__line">
-                    <strong>Ёмкость и напряжение:</strong> {row.battery.capacity_mah} мА·ч,{" "}
-                    {row.battery.voltage_v} В
-                  </p>
+                <div className="battery-life-items-table__col battery-life-items-table__col--title">
+                  <Link to={`/battery/${row.battery_id}`} className="battery-life-item-row__link">
+                    {row.battery.title}
+                  </Link>
+                </div>
+                <div className="battery-life-items-table__col battery-life-items-table__col--spec">
+                  {row.battery.capacity_mah} мА·ч / {row.battery.voltage_v} В
+                </div>
+                <div className="battery-life-items-table__col battery-life-items-table__col--current">
                   {isDraft && draft && !mockData ? (
-                    <div className="battery-life-item-card__user-fields">
-                      <Form.Group className="mb-2">
-                        <Form.Label>Ток, мА</Form.Label>
-                        <Form.Control
-                          type="number"
-                          min={1}
-                          value={draft.current_ma}
-                          onChange={(e) =>
-                            updateRowDraft(row.battery_id, { current_ma: Number(e.target.value) || 0 })
-                          }
-                        />
-                      </Form.Group>
-                      <Form.Group className="mb-2">
-                        <Form.Label>Количество</Form.Label>
-                        <Form.Control
-                          type="number"
-                          min={1}
-                          value={draft.quantity}
-                          onChange={(e) =>
-                            updateRowDraft(row.battery_id, { quantity: Number(e.target.value) || 1 })
-                          }
-                        />
-                      </Form.Group>
-                      <div className="d-flex flex-wrap gap-2">
-                        <Button
-                          size="sm"
-                          variant="primary"
-                          disabled={busy || lineBusy}
-                          onClick={() => handleSaveRow(row.battery_id)}
-                        >
-                          Сохранить строку
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline-danger"
-                          disabled={busy || removeBusy}
-                          onClick={() => handleRemoveRow(row.battery_id)}
-                        >
-                          Удалить
-                        </Button>
-                      </div>
-                    </div>
+                    <Form.Control
+                      type="number"
+                      min={1}
+                      size="sm"
+                      className="battery-life-item-row__input"
+                      value={draft.current_ma}
+                      onChange={(e) =>
+                        updateRowDraft(row.battery_id, { current_ma: Number(e.target.value) || 0 })
+                      }
+                    />
                   ) : (
-                    <div className="battery-life-item-card__user-fields">
-                      <p className="battery-life-item-card__line">
-                        <strong>Ток:</strong> {row.current_ma} мА
-                      </p>
-                      <p className="battery-life-item-card__line">
-                        <strong>Количество:</strong> {row.quantity}
-                      </p>
-                    </div>
+                    row.current_ma
                   )}
-                  <div className="battery-life-item-card__result">
-                    <p className="battery-life-item-card__line">
-                      <strong>Время на единицу:</strong> {(row.runtime_hours ?? 0).toFixed(2)} ч
-                    </p>
-                    <p className="battery-life-item-card__line">
-                      <strong>По позиции:</strong> {runtimeTotal.toFixed(2)} ч
-                    </p>
-                  </div>
                 </div>
+                <div className="battery-life-items-table__col battery-life-items-table__col--qty">
+                  {isDraft && draft && !mockData ? (
+                    <Form.Control
+                      type="number"
+                      min={1}
+                      size="sm"
+                      className="battery-life-item-row__input"
+                      value={draft.quantity}
+                      onChange={(e) =>
+                        updateRowDraft(row.battery_id, { quantity: Number(e.target.value) || 1 })
+                      }
+                    />
+                  ) : (
+                    row.quantity
+                  )}
+                </div>
+                <div className="battery-life-items-table__col battery-life-items-table__col--unit battery-life-item-row__result">
+                  {(row.runtime_hours ?? 0).toFixed(2)}
+                </div>
+                <div className="battery-life-items-table__col battery-life-items-table__col--total battery-life-item-row__result">
+                  {runtimeTotal.toFixed(2)}
+                </div>
+                {isDraft && !mockData ? (
+                  <div className="battery-life-items-table__col battery-life-items-table__col--actions">
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      disabled={busy || lineBusy}
+                      onClick={() => handleSaveRow(row.battery_id)}
+                    >
+                      Сохранить
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline-danger"
+                      disabled={busy || removeBusy}
+                      onClick={() => handleRemoveRow(row.battery_id)}
+                    >
+                      Удалить
+                    </Button>
+                  </div>
+                ) : null}
               </article>
             );
           })}

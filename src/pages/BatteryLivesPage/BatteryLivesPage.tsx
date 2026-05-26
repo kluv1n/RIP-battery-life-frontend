@@ -11,6 +11,20 @@ import { ROUTES } from "../../routePaths";
 import { applicationStatusLabelEn } from "../../utils/applicationStatusEn";
 import "./BatteryLivesPage.css";
 
+/** Число позиций с ненулевым расчётом (как «1 непустых» в эталоне). */
+function nonEmptyResultCount(row: { completed_item_count: number }): number {
+  return Math.max(0, Number(row.completed_item_count) || 0);
+}
+
+function formatNonEmptyLabel(n: number): string {
+  if (n <= 0) return "—";
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${n} непустой`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return `${n} непустых`;
+  return `${n} непустых`;
+}
+
 export default function BatteryLivesPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -19,6 +33,7 @@ export default function BatteryLivesPage() {
     (s) => s.batteryLifeApplication,
   );
   const [creatorFilter, setCreatorFilter] = useState("");
+  const [titleFilter, setTitleFilter] = useState("");
   const [draftFrom, setDraftFrom] = useState(filters.fromDate);
   const [draftTo, setDraftTo] = useState(filters.toDate);
   const [draftStatus, setDraftStatus] = useState(filters.status);
@@ -44,10 +59,22 @@ export default function BatteryLivesPage() {
   }, [isAuthenticated, navigate, load]);
 
   const visible = useMemo(() => {
+    let rows = list;
+    const theme = titleFilter.trim().toLowerCase();
+    if (theme) {
+      rows = rows.filter((a) => (a.title ?? "").toLowerCase().includes(theme));
+    }
     const q = creatorFilter.trim().toLowerCase();
-    if (!q) return list;
-    return list.filter((a) => (a.creator_login ?? "").toLowerCase().includes(q));
-  }, [list, creatorFilter]);
+    if (q && isModerator) {
+      rows = rows.filter((a) => (a.creator_login ?? "").toLowerCase().includes(q));
+    }
+    return rows;
+  }, [list, titleFilter, creatorFilter, isModerator]);
+
+  const applicationsWithResultCount = useMemo(
+    () => visible.filter((row) => nonEmptyResultCount(row) > 0).length,
+    [visible],
+  );
 
   const handleApplyFilters = () => {
     dispatch(
@@ -75,6 +102,15 @@ export default function BatteryLivesPage() {
 
         <section className="battery-lives-page__filters">
           <div className="battery-lives-page__filter-row">
+            <Form.Group className="battery-lives-page__fg battery-lives-page__fg--grow">
+              <Form.Label>Тема (на клиенте)</Form.Label>
+              <Form.Control
+                type="text"
+                value={titleFilter}
+                onChange={(e) => setTitleFilter(e.target.value)}
+                placeholder="Часть темы заявки"
+              />
+            </Form.Group>
             <Form.Group className="battery-lives-page__fg">
               <Form.Label>С даты</Form.Label>
               <Form.Control
@@ -114,6 +150,13 @@ export default function BatteryLivesPage() {
           </Button>
         </section>
 
+        {!listLoading ? (
+          <p className="battery-lives-page__summary" aria-live="polite">
+            Найдено заявок: <strong>{visible.length}</strong>. С непустым результатом:{" "}
+            <strong>{applicationsWithResultCount}</strong>
+          </p>
+        ) : null}
+
         {listError ? <div className="battery-lives-page__error">{listError}</div> : null}
 
         {listLoading && visible.length === 0 ? (
@@ -123,11 +166,13 @@ export default function BatteryLivesPage() {
         ) : null}
 
         <div className="battery-lives-page__table-wrap">
-          <Table striped bordered hover responsive>
+          <Table striped bordered hover responsive size="sm" className="battery-lives-page__table">
             <thead>
               <tr>
                 <th>ID</th>
                 <th>Статус</th>
+                <th>Тема</th>
+                <th>Результат</th>
                 <th>Создатель</th>
                 <th>Создана</th>
                 <th>Формирование</th>
@@ -141,6 +186,7 @@ export default function BatteryLivesPage() {
                 const id = row.battery_life_id;
                 const finKey = `finish-${id}`;
                 const finBusy = Boolean(itemMutationLoading[finKey]);
+                const filled = nonEmptyResultCount(row);
                 return (
                   <tr key={id}>
                     <td>
@@ -149,6 +195,10 @@ export default function BatteryLivesPage() {
                       </button>
                     </td>
                     <td>{applicationStatusLabelEn(row.status)}</td>
+                    <td>{row.title?.trim() ? row.title : "—"}</td>
+                    <td className={filled > 0 ? "battery-lives-page__result--filled" : ""}>
+                      {formatNonEmptyLabel(filled)}
+                    </td>
                     <td>{row.creator_login ?? "—"}</td>
                     <td>
                       {row.created_at ? new Date(row.created_at).toLocaleString("ru-RU") : "—"}
