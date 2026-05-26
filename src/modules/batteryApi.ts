@@ -1,4 +1,5 @@
 import axios from "axios";
+import { apiBaseUrl, minioPublicBase } from "./runtimeConfig";
 import type { BatteryServiceMock } from "./batteryApi.types";
 
 export type {
@@ -9,7 +10,7 @@ export type {
   BatteryServiceMock,
 } from "./batteryApi.types";
 
-const baseURL = import.meta.env.VITE_API_BASE_URL ?? "/api";
+const baseURL = apiBaseUrl;
 
 /** Список и карточка типов АКБ (услуги): только axios, без swagger-клиента. */
 export const batteryTypesAxios = axios.create({
@@ -29,9 +30,7 @@ batteryTypesAxios.interceptors.request.use((config) => {
  * В dev — proxy Vite `/minio` → localhost:9000 (см. vite.config.ts).
  */
 const MINIO_PUBLIC_BASE =
-  (import.meta.env.VITE_MINIO_BASE?.replace(/\/$/, "") as string | undefined) ??
-  (import.meta.env.VITE_MEDIA_BASE?.replace(/\/$/, "") as string | undefined) ??
-  (import.meta.env.DEV ? "/minio/test" : "http://localhost:9000/test");
+  (import.meta.env.VITE_MEDIA_BASE?.replace(/\/$/, "") as string | undefined) ?? minioPublicBase;
 
 export function fallbackImageUrl(): string {
   return (
@@ -42,13 +41,26 @@ export function fallbackImageUrl(): string {
   );
 }
 
+function encodeStorageKey(key: string): string {
+  return key
+    .split("/")
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+}
+
 function proxifyMinioDevUrl(url: string): string {
   try {
     const u = new URL(url);
     const port = u.port || (u.protocol === "https:" ? "443" : "80");
     const isMinioDev =
       (u.hostname === "localhost" || u.hostname === "127.0.0.1") && port === "9000";
-    if (isMinioDev) return `/minio${u.pathname}${u.search}`;
+    if (isMinioDev) {
+      const path = u.pathname
+        .split("/")
+        .map((segment) => (segment ? encodeURIComponent(decodeURIComponent(segment)) : segment))
+        .join("/");
+      return `/minio${path}${u.search}`;
+    }
   } catch {
     /* ignore */
   }
@@ -66,7 +78,8 @@ export function resolveMediaUrl(key: string): string {
   ) {
     return key.startsWith("http") ? proxifyMinioDevUrl(key) : key;
   }
-  return `${MINIO_PUBLIC_BASE}/${key.replace(/^\//, "")}`;
+  const normalized = key.replace(/^\//, "");
+  return `${MINIO_PUBLIC_BASE}/${encodeStorageKey(normalized)}`;
 }
 
 function toEnglishClipDescription(input?: string): string {

@@ -1,7 +1,5 @@
 import { Link } from "react-router-dom";
-import { useEffect } from "react";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { fetchBatteryLifeApplicationCart } from "../../store/slices/batteryLifeApplicationSlice";
+import { useAppSelector } from "../../store/hooks";
 
 function CartIcon() {
   return (
@@ -22,13 +20,8 @@ function CartIcon() {
 
 /** Как в new_front `CartRow`: счётчик + ссылка на черновик при наличии позиций. */
 export default function CartRow({ className = "" }: { className?: string }) {
-  const dispatch = useAppDispatch();
   const { isAuthenticated } = useAppSelector((s) => s.user);
   const cart = useAppSelector((s) => s.batteryLifeApplication.cart);
-
-  useEffect(() => {
-    void dispatch(fetchBatteryLifeApplicationCart());
-  }, [dispatch, isAuthenticated]);
 
   const count = cart?.items_count ?? 0;
   const hasDraft = Boolean(isAuthenticated && cart?.id != null && count > 0);

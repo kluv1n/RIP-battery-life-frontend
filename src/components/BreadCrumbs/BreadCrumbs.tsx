@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, matchPath, useLocation } from "react-router-dom";
+import type { BatteryServiceRouteState } from "../../routeState";
 import { BATTERIES_MOCK, getMockBattery } from "../../modules/mock";
 import { getBatteryType } from "../../modules/batteryApi";
 import { ROUTES } from "../../routePaths";
@@ -8,7 +9,8 @@ import "./BreadCrumbs.css";
 type Crumb = { label: string; to?: string };
 
 export default function BreadCrumbs() {
-  const { pathname } = useLocation();
+  const { pathname, state } = useLocation();
+  const catalogBattery = (state as BatteryServiceRouteState | null)?.battery;
   const [batteryTitle, setBatteryTitle] = useState<string | null>(null);
 
   useEffect(() => {
@@ -19,6 +21,9 @@ export default function BreadCrumbs() {
       return;
     }
     const id = Number(rawId);
+    if (catalogBattery?.battery_id === id && catalogBattery.title) {
+      setBatteryTitle(catalogBattery.title);
+    }
     let cancelled = false;
     const run = async () => {
       const data = await getBatteryType(id);
@@ -34,7 +39,7 @@ export default function BreadCrumbs() {
     return () => {
       cancelled = true;
     };
-  }, [pathname]);
+  }, [pathname, catalogBattery?.battery_id, catalogBattery?.title]);
 
   const crumbs: Crumb[] = (() => {
     if (pathname === "/" || pathname === "") {

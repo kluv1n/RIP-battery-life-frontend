@@ -1,33 +1,25 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import MainLayout from "./layouts/MainLayout";
+import GuestLayout from "./layouts/GuestLayout";
 import ServicesPage from "./pages/ServicesPage/ServicesPage";
 import ServicePage from "./pages/ServicePage/ServicePage";
 import BatteryLifePage from "./pages/BatteryLifePage/BatteryLifePage";
-import BatteryLivesPage from "./pages/BatteryLivesPage/BatteryLivesPage";
-import SignInPage from "./pages/SignInPage/SignInPage";
-import SignUpPage from "./pages/SignUpPage/SignUpPage";
-import ProfilePage from "./pages/ProfilePage/ProfilePage";
 import { ROUTES } from "./routePaths";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./index_style.css";
 
-function App() {
+/** Три страницы гостя для Tauri / демо без авторизации. */
+export default function AppGuest() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
-        <Route element={<MainLayout />}>
+        <Route element={<GuestLayout />}>
           <Route path={ROUTES.SERVICES} element={<ServicesPage />} />
           <Route path="/catalog" element={<Navigate to="/" replace />} />
           <Route path={ROUTES.SERVICE} element={<ServicePage />} />
           <Route path={ROUTES.BATTERY_LIFE} element={<BatteryLifePage />} />
-          <Route path={ROUTES.BATTERY_LIVES} element={<BatteryLivesPage />} />
-          <Route path={ROUTES.SIGN_IN} element={<SignInPage />} />
-          <Route path={ROUTES.SIGN_UP} element={<SignUpPage />} />
-          <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </BrowserRouter>
   );
 }
-
-export default App;

@@ -27,6 +27,8 @@ type RowDraft = Pick<BatteryLifeItemDetailJSON, "current_ma" | "quantity">;
 
 const THEME_PLACEHOLDER = "Кратко укажите тему или сценарий эксплуатации набора АКБ";
 
+const isGuestApp = import.meta.env.VITE_GUEST_APP === "true";
+
 export default function BatteryLifePage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -50,7 +52,12 @@ export default function BatteryLifePage() {
   }, [id]);
 
   useEffect(() => {
-    if (!id || !isAuthenticated) return;
+    if (!id) return;
+    if (isGuestApp) {
+      reloadMock();
+      return;
+    }
+    if (!isAuthenticated) return;
     setMockData(null);
     void dispatch(fetchBatteryLifeApplicationDetail(Number(id))).then((a) => {
       if (fetchBatteryLifeApplicationDetail.rejected.match(a)) {
@@ -60,6 +67,7 @@ export default function BatteryLifePage() {
   }, [id, isAuthenticated, dispatch, reloadMock]);
 
   useEffect(() => {
+    if (isGuestApp) return;
     if (!isAuthenticated) {
       navigate(ROUTES.SIGN_IN, { replace: true });
     }
@@ -152,7 +160,7 @@ export default function BatteryLifePage() {
     });
   };
 
-  if (!isAuthenticated) {
+  if (!isGuestApp && !isAuthenticated) {
     return null;
   }
 
@@ -209,30 +217,34 @@ export default function BatteryLifePage() {
             ) : null}
           </div>
 
-          <Form.Group className="mb-2 mt-2 battery-life-detail__theme" controlId="bl-theme">
-            <Form.Label>Тема заявки</Form.Label>
+          <div className="mb-2 mt-2 battery-life-detail__theme">
             {themeEditable ? (
-              <div className="battery-life-detail__theme-input-wrap">
-                {titleDraft.length === 0 ? (
-                  <span className="battery-life-detail__theme-hint" aria-hidden>
-                    {THEME_PLACEHOLDER}
-                  </span>
-                ) : null}
-                <Form.Control
-                  as="textarea"
-                  rows={2}
-                  className={`battery-life-detail__theme-field${titleDraft.length === 0 ? " battery-life-detail__theme-field--empty" : ""}`}
-                  value={titleDraft}
-                  onChange={(e) => setTitleDraft(e.target.value)}
-                  aria-label="Тема заявки"
-                />
-              </div>
+              <Form.Group controlId="bl-theme">
+                <Form.Label>Тема заявки</Form.Label>
+                <div className="battery-life-detail__theme-input-wrap">
+                  {titleDraft.length === 0 ? (
+                    <span className="battery-life-detail__theme-hint" aria-hidden>
+                      {THEME_PLACEHOLDER}
+                    </span>
+                  ) : null}
+                  <Form.Control
+                    as="textarea"
+                    rows={2}
+                    className={`battery-life-detail__theme-field${titleDraft.length === 0 ? " battery-life-detail__theme-field--empty" : ""}`}
+                    value={titleDraft}
+                    onChange={(e) => setTitleDraft(e.target.value)}
+                  />
+                </div>
+              </Form.Group>
             ) : (
-              <div className="battery-life-detail__theme-readonly">
-                {titleDraft.trim() ? titleDraft : "—"}
-              </div>
+              <>
+                <div className="form-label">Тема заявки</div>
+                <div className="battery-life-detail__theme-readonly" id="bl-theme-readonly">
+                  {titleDraft.trim() ? titleDraft : "—"}
+                </div>
+              </>
             )}
-          </Form.Group>
+          </div>
           {isDraft && !mockData ? (
             <Button variant="outline-primary" size="sm" className="me-2" onClick={handleSaveHeader} disabled={busy}>
               Сохранить тему заявки
@@ -323,9 +335,10 @@ export default function BatteryLifePage() {
             const draft = rowDrafts[row.battery_id];
             const lineBusy = lineBusyKey(row.battery_id);
             const removeBusy = rmBusy(row.battery_id);
+            const rowKey = `${row.battery_life_id}-${row.battery_id}`;
             return (
               <article
-                key={`${row.battery_life_id}-${row.battery_id}`}
+                key={rowKey}
                 className={`battery-life-item-row${isDraft && !mockData ? " battery-life-item-row--draft" : ""}`}
               >
                 <div className="battery-life-items-table__col battery-life-items-table__col--photo">
@@ -345,7 +358,11 @@ export default function BatteryLifePage() {
                   )}
                 </div>
                 <div className="battery-life-items-table__col battery-life-items-table__col--title">
-                  <Link to={`/battery/${row.battery_id}`} className="battery-life-item-row__link">
+                  <Link
+                    to={`/battery/${row.battery_id}`}
+                    state={{ battery: row.battery }}
+                    className="battery-life-item-row__link"
+                  >
                     {row.battery.title}
                   </Link>
                 </div>
@@ -355,10 +372,12 @@ export default function BatteryLifePage() {
                 <div className="battery-life-items-table__col battery-life-items-table__col--current">
                   {isDraft && draft && !mockData ? (
                     <Form.Control
+                      id={`bl-item-${rowKey}-current`}
                       type="number"
                       min={1}
                       size="sm"
                       className="battery-life-item-row__input"
+                      aria-label={`Ток, ${row.battery.title}`}
                       value={draft.current_ma}
                       onChange={(e) =>
                         updateRowDraft(row.battery_id, { current_ma: Number(e.target.value) || 0 })
@@ -371,10 +390,12 @@ export default function BatteryLifePage() {
                 <div className="battery-life-items-table__col battery-life-items-table__col--qty">
                   {isDraft && draft && !mockData ? (
                     <Form.Control
+                      id={`bl-item-${rowKey}-qty`}
                       type="number"
                       min={1}
                       size="sm"
                       className="battery-life-item-row__input"
+                      aria-label={`Количество, ${row.battery.title}`}
                       value={draft.quantity}
                       onChange={(e) =>
                         updateRowDraft(row.battery_id, { quantity: Number(e.target.value) || 1 })

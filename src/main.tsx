@@ -1,13 +1,11 @@
-import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
-import App from "./App";
+import AppRoot from "./AppRoot";
 import { store } from "./store";
 
+/** Без StrictMode: на карточке ровно 2 GET (страница + крошки), без удвоения до 4 в dev. */
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <Provider store={store}>
-      <App />
-    </Provider>
-  </StrictMode>,
+  <Provider store={store}>
+    <AppRoot />
+  </Provider>,
 );

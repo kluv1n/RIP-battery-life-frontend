@@ -1,9 +1,19 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
+  readonly VITE_API_BASE_URL?: string;
+  /** http://192.168.x.x:8080 — для Tauri-сборки (как в эталоне tauri) */
+  readonly VITE_API_ORIGIN?: string;
+  readonly VITE_MINIO_PUBLIC_BASE?: string;
+  readonly VITE_BASE_PATH?: string;
   readonly VITE_MINIO_BASE?: string;
-  /** База для относительных имён файлов фото/видео, как в шаблоне: http://localhost:9000/test */
   readonly VITE_MEDIA_BASE?: string;
+  readonly VITE_GUEST_APP?: string;
+  readonly VITE_DEV_HTTPS?: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
 }
 
 declare module "*.mp4" {

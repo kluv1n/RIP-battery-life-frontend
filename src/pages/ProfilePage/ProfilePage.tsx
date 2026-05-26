@@ -33,15 +33,15 @@ export default function ProfilePage() {
           предусмотрена.
         </Alert>
         <Form className="profile-page__form">
-          <Form.Group className="mb-3">
+          <Form.Group className="mb-3" controlId="profile-login">
             <Form.Label>Логин</Form.Label>
             <Form.Control type="text" value={username} readOnly />
           </Form.Group>
-          <Form.Group className="mb-3">
+          <Form.Group className="mb-3" controlId="profile-role">
             <Form.Label>Роль</Form.Label>
             <Form.Control type="text" value={isModerator ? "Модератор" : "Пользователь"} readOnly />
           </Form.Group>
-          <Form.Group className="mb-3">
+          <Form.Group className="mb-3" controlId="profile-jwt">
             <Form.Label>Фрагмент JWT</Form.Label>
             <Form.Control
               as="textarea"
@@ -52,7 +52,7 @@ export default function ProfilePage() {
             />
           </Form.Group>
           {payload ? (
-            <Form.Group className="mb-3">
+            <Form.Group className="mb-3" controlId="profile-claims">
               <Form.Label>Claims (payload)</Form.Label>
               <Form.Control as="textarea" rows={6} readOnly value={JSON.stringify(payload, null, 2)} />
             </Form.Group>

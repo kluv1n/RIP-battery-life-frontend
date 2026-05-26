@@ -1,6 +1,7 @@
 import { Api } from "./Api";
+import { apiBaseUrl } from "../modules/runtimeConfig";
 
-const baseURL = import.meta.env.VITE_API_BASE_URL ?? "/api";
+const baseURL = apiBaseUrl;
 
 export const api = new Api({
   baseURL,

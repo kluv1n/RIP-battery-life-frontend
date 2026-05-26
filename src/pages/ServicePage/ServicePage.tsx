@@ -9,7 +9,6 @@ import {
   resolveMediaUrl,
   type BatteryServiceMock,
 } from "../../modules/batteryApi";
-
 function detailMediaAlt(b: BatteryServiceMock): string {
   const d = b.short_description?.trim();
   if (!d) return b.title;
@@ -93,10 +92,13 @@ export default function ServicePage() {
 
   const toolbarForm = (
     <form className="toolbar__search-form" onSubmit={handleCatalogSearch}>
+      <label htmlFor="catalog-title-search-readonly" className="visually-hidden">
+        Поиск по типу аккумулятора
+      </label>
       <span className="search-bar">
         <input
-          type="text"
-          name="query"
+          id="catalog-title-search-readonly"
+          type="search"
           className="search-input"
           placeholder="Search by battery type"
           readOnly

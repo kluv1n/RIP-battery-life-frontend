@@ -89,7 +89,11 @@ export default function ServiceCard({
     return (
       <div className="card-service-wrapper">
         <div className="card card--photo-rank">
-          <Link to={`/battery/${battery.battery_id}`} className="card__link card__link--photo-rank">
+          <Link
+            to={`/battery/${battery.battery_id}`}
+            state={{ battery }}
+            className="card__link card__link--photo-rank"
+          >
             <div className="card__photo-rank-thumb">
               <img
                 src={imageError ? fallbackImageUrl() : imageUrl}
@@ -123,7 +127,7 @@ export default function ServiceCard({
   return (
     <div className="card-service-wrapper">
       <div className="card">
-        <Link to={`/battery/${battery.battery_id}`} className="card__link">
+        <Link to={`/battery/${battery.battery_id}`} state={{ battery }} className="card__link">
           <div className="card__media">
             <img
               className="card__photo"

@@ -1,4 +1,4 @@
-import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Button, ProgressBar, Spinner } from "react-bootstrap";
 import CatalogChrome from "../../components/CatalogChrome/CatalogChrome";
 import ServicesFilterBar from "../../components/ServicesFilterBar/ServicesFilterBar";
@@ -9,36 +9,43 @@ import {
   listBatteryTypes,
   type BatteryServiceMock,
 } from "../../modules/batteryApi";
-import { BATTERIES_MOCK, filterMockBatteries, type BatteryFilters } from "../../modules/mock";
-import { useAppSelector } from "../../store/hooks";
+import { BATTERIES_MOCK, filterMockBatteries } from "../../modules/mock";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { setCatalogTitleFilter } from "../../store/slices/catalogFiltersSlice";
 import "./ServicesPage.css";
 
-const initialFilters = (): BatteryFilters => ({ title: "" });
-
 export default function ServicesPage() {
+  const dispatch = useAppDispatch();
+  const titleFilter = useAppSelector((s) => s.catalogFilters.title);
   const isAuthenticated = useAppSelector((s) => s.user.isAuthenticated);
   const [sourceBatteries, setSourceBatteries] = useState<BatteryServiceMock[]>(BATTERIES_MOCK);
-  const [batteries, setBatteries] = useState<BatteryServiceMock[]>(BATTERIES_MOCK);
-  const [filters, setFilters] = useState<BatteryFilters>(initialFilters);
-  const [loading, setLoading] = useState(false);
-  const [useMock, setUseMock] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [useMock, setUseMock] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [clipSessionActive, setClipSessionActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  /** Один запрос при открытии каталога (без дубля из applyFilters + StrictMode). */
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
     const load = async () => {
-      const remote = await listBatteryTypes();
-      if (cancelled) return;
-      if (remote.length > 0) {
-        setSourceBatteries(remote);
-        setBatteries(remote);
-        setUseMock(false);
-      } else {
+      try {
+        const remote = await listBatteryTypes();
+        if (cancelled) return;
+        if (remote.length > 0) {
+          setSourceBatteries(remote);
+          setUseMock(false);
+        } else {
+          setSourceBatteries(BATTERIES_MOCK);
+          setUseMock(true);
+        }
+      } catch {
+        if (cancelled) return;
         setSourceBatteries(BATTERIES_MOCK);
-        setBatteries(BATTERIES_MOCK);
         setUseMock(true);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     };
     void load();
@@ -46,6 +53,42 @@ export default function ServicesPage() {
       cancelled = true;
     };
   }, []);
+
+  /** Фильтр по теме — на клиенте; к API только по кнопке «Search». */
+  const batteries = useMemo(() => {
+    if (useMock || import.meta.env.VITE_GUEST_APP === "true") {
+      return filterMockBatteries({ title: titleFilter });
+    }
+    const t = titleFilter.trim().toLowerCase();
+    if (!t) return sourceBatteries;
+    return sourceBatteries.filter(
+      (b) =>
+        b.title.toLowerCase().includes(t) ||
+        b.short_description.toLowerCase().includes(t) ||
+        b.description.toLowerCase().includes(t),
+    );
+  }, [sourceBatteries, titleFilter, useMock]);
+
+  const runServerSearch = useCallback(async () => {
+    if (useMock || import.meta.env.VITE_GUEST_APP === "true") return;
+    setLoading(true);
+    try {
+      const remote = await listBatteryTypes(
+        titleFilter.trim() ? { title: titleFilter.trim() } : undefined,
+      );
+      if (remote.length > 0) {
+        setSourceBatteries(remote);
+        setUseMock(false);
+      } else if (!titleFilter.trim()) {
+        setSourceBatteries([]);
+      }
+    } catch {
+      setSourceBatteries(BATTERIES_MOCK);
+      setUseMock(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [titleFilter, useMock]);
 
   const clipItems = useMemo(
     () =>
@@ -72,7 +115,6 @@ export default function ServicesPage() {
     const wasAuth = prevAuthRef.current;
     prevAuthRef.current = isAuthenticated;
     if (wasAuth && !isAuthenticated) {
-      setFilters(initialFilters());
       setSelectedImage((img) => {
         if (img?.startsWith("blob:")) URL.revokeObjectURL(img);
         return null;
@@ -88,26 +130,6 @@ export default function ServicesPage() {
     sourceBatteries.forEach((b) => m.set(b.battery_id, b));
     return m;
   }, [sourceBatteries]);
-
-  const applyFilters = async () => {
-    setLoading(true);
-    try {
-      const remote = await listBatteryTypes({ title: filters.title });
-      if (remote.length > 0) {
-        setBatteries(remote);
-        setUseMock(false);
-      } else if (useMock) {
-        setBatteries(filterMockBatteries(filters));
-      } else {
-        setBatteries([]);
-      }
-    } catch {
-      setBatteries(filterMockBatteries(filters));
-      setUseMock(true);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleUploadButtonClick = () => {
     if (!clipSessionActive) setClipSessionActive(true);
@@ -153,10 +175,12 @@ export default function ServicesPage() {
   const toolbarLeading = (
     <div className="catalog-photo-search" aria-label="Search similar batteries by photo">
       <input
+        id="catalog-photo-upload"
         type="file"
         accept="image/*"
         ref={fileInputRef}
         className="catalog-toolbar-row__file-input"
+        aria-label="Загрузить фото для поиска"
         onChange={handleImageUpload}
       />
       <button
@@ -185,20 +209,16 @@ export default function ServicesPage() {
         />
       ) : null}
       {selectedImage ? (
-        <img
-          className="catalog-toolbar-row__thumb"
-          src={selectedImage}
-          alt="Uploaded query image"
-        />
+        <img className="catalog-toolbar-row__thumb" src={selectedImage} alt="Uploaded query image" />
       ) : null}
     </div>
   );
 
   const toolbarForm = (
     <ServicesFilterBar
-      query={filters.title}
-      onQueryChange={(q) => setFilters((f) => ({ ...f, title: q }))}
-      onSearch={applyFilters}
+      query={titleFilter}
+      onQueryChange={(q) => dispatch(setCatalogTitleFilter(q))}
+      onSearch={() => void runServerSearch()}
     />
   );
 

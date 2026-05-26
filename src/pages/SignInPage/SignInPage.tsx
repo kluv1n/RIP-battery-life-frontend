@@ -40,6 +40,7 @@ export default function SignInPage() {
           </label>
           <input
             id="signin-login"
+            name="signin-login"
             className="auth-page__input"
             type="text"
             value={form.login}
@@ -53,6 +54,7 @@ export default function SignInPage() {
           </label>
           <input
             id="signin-password"
+            name="signin-password"
             className="auth-page__input"
             type="password"
             value={form.password}

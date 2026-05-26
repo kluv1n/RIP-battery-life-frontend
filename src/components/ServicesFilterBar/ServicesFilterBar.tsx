@@ -1,5 +1,4 @@
 import type { FormEvent } from "react";
-import Form from "react-bootstrap/Form";
 import "./ServicesFilterBar.css";
 
 export interface ServicesFilterBarProps {
@@ -16,14 +15,18 @@ export default function ServicesFilterBar({ query, onQueryChange, onSearch }: Se
 
   return (
     <div className="services-filter-bar toolbar__search-form">
-      <Form className="search-form services-filter-bar__form" onSubmit={handleSubmit}>
+      <form className="search-form services-filter-bar__form" onSubmit={handleSubmit}>
+        <label htmlFor="catalog-title-search" className="visually-hidden">
+          Поиск по типу аккумулятора
+        </label>
         <span className="search-bar">
-          <Form.Control
-            type="text"
-            name="query"
-            className="search-input"
+          <input
+            id="catalog-title-search"
+            type="search"
+            className="search-input form-control"
             placeholder="Search by battery type"
             value={query}
+            autoComplete="off"
             onChange={(e) => onQueryChange(e.target.value)}
           />
           <button type="submit" className="search-btn" aria-label="Search">
@@ -39,7 +42,7 @@ export default function ServicesFilterBar({ query, onQueryChange, onSearch }: Se
             </svg>
           </button>
         </span>
-      </Form>
+      </form>
     </div>
   );
 }

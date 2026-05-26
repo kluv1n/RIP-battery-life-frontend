@@ -100,9 +100,18 @@ export default function BatteryLivesPage() {
           {isModerator ? "Заявки (модератор)" : "Мои заявки"}
         </h1>
 
-        <section className="battery-lives-page__filters">
+        <form
+          className="battery-lives-page__filters"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleApplyFilters();
+          }}
+        >
           <div className="battery-lives-page__filter-row">
-            <Form.Group className="battery-lives-page__fg battery-lives-page__fg--grow">
+            <Form.Group
+              className="battery-lives-page__fg battery-lives-page__fg--grow"
+              controlId="bl-list-filter-title"
+            >
               <Form.Label>Тема (на клиенте)</Form.Label>
               <Form.Control
                 type="text"
@@ -111,7 +120,7 @@ export default function BatteryLivesPage() {
                 placeholder="Часть темы заявки"
               />
             </Form.Group>
-            <Form.Group className="battery-lives-page__fg">
+            <Form.Group className="battery-lives-page__fg" controlId="bl-list-filter-from">
               <Form.Label>С даты</Form.Label>
               <Form.Control
                 type="date"
@@ -119,11 +128,11 @@ export default function BatteryLivesPage() {
                 onChange={(e) => setDraftFrom(e.target.value)}
               />
             </Form.Group>
-            <Form.Group className="battery-lives-page__fg">
+            <Form.Group className="battery-lives-page__fg" controlId="bl-list-filter-to">
               <Form.Label>По дату</Form.Label>
               <Form.Control type="date" value={draftTo} onChange={(e) => setDraftTo(e.target.value)} />
             </Form.Group>
-            <Form.Group className="battery-lives-page__fg">
+            <Form.Group className="battery-lives-page__fg" controlId="bl-list-filter-status">
               <Form.Label>Статус</Form.Label>
               <Form.Select value={draftStatus} onChange={(e) => setDraftStatus(e.target.value)}>
                 <option value="">Все</option>
@@ -134,7 +143,10 @@ export default function BatteryLivesPage() {
               </Form.Select>
             </Form.Group>
             {isModerator ? (
-              <Form.Group className="battery-lives-page__fg battery-lives-page__fg--grow">
+              <Form.Group
+                className="battery-lives-page__fg battery-lives-page__fg--grow"
+                controlId="bl-list-filter-creator"
+              >
                 <Form.Label>Создатель (на клиенте)</Form.Label>
                 <Form.Control
                   type="text"
@@ -145,10 +157,10 @@ export default function BatteryLivesPage() {
               </Form.Group>
             ) : null}
           </div>
-          <Button variant="primary" className="battery-lives-page__apply" onClick={handleApplyFilters}>
+          <Button type="submit" variant="primary" className="battery-lives-page__apply">
             Применить фильтры
           </Button>
-        </section>
+        </form>
 
         {!listLoading ? (
           <p className="battery-lives-page__summary" aria-live="polite">

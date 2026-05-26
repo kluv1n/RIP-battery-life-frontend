@@ -43,6 +43,7 @@ export default function SignUpPage() {
           </label>
           <input
             id="signup-login"
+            name="signup-login"
             className="auth-page__input"
             type="text"
             value={form.login}
@@ -56,6 +57,7 @@ export default function SignUpPage() {
           </label>
           <input
             id="signup-password"
+            name="signup-password"
             className="auth-page__input"
             type="password"
             value={form.password}
@@ -69,6 +71,7 @@ export default function SignUpPage() {
           </label>
           <input
             id="signup-password2"
+            name="signup-password2"
             className="auth-page__input"
             type="password"
             value={form.password2}
