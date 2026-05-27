@@ -1,1 +1,18 @@
-{"name":"Battery Life — типы АКБ","short_name":"Battery Life","description":"Каталог типов аккумуляторов и заявки на расчёт времени работы","start_url":"/RIP-battery-life-frontend/","display":"standalone","background_color":"#0a3141","theme_color":"#0a3141","lang":"en","scope":"/RIP-battery-life-frontend/","icons":[{"src":"vite.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]}
+{
+  "name": "Battery Life — типы АКБ",
+  "short_name": "Battery Life",
+  "description": "Каталог типов аккумуляторов и заявки на расчёт времени работы",
+  "theme_color": "#0a3141",
+  "background_color": "#0a3141",
+  "display": "standalone",
+  "start_url": "/RIP-battery-life-frontend/",
+  "scope": "/RIP-battery-life-frontend/",
+  "icons": [
+    {
+      "src": "vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
