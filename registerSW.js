@@ -1,1 +1,0 @@
-if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/RIP-battery-life-frontend/sw.js', { scope: '/RIP-battery-life-frontend/' })})}
