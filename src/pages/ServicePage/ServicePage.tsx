@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import type { FormEvent } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import CatalogChrome from "../../components/CatalogChrome/CatalogChrome";
-import { BATTERIES_MOCK, getMockBattery, MOCK_COVER, MOCK_VIDEO } from "../../modules/mock";
+import { BATTERIES_MOCK, getMockBattery } from "../../modules/mock";
 import {
   fallbackImageUrl,
   getBatteryType,
-  resolveMediaUrl,
+  resolveCatalogPhotoUrl,
+  resolveCatalogVideoUrl,
   type BatteryServiceMock,
 } from "../../modules/batteryApi";
 function detailMediaAlt(b: BatteryServiceMock): string {
@@ -19,9 +19,7 @@ export default function ServicePage() {
   const [battery, setBattery] = useState<BatteryServiceMock | null>(null);
   const [mediaError, setMediaError] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [useOfflineMediaStub, setUseOfflineMediaStub] = useState(false);
   const { id } = useParams();
-  const navigate = useNavigate();
 
   useEffect(() => {
     let cancelled = false;
@@ -37,12 +35,10 @@ export default function ServicePage() {
       const remote = await getBatteryType(n);
       if (cancelled) return;
       if (remote) {
-        setUseOfflineMediaStub(false);
         setBattery(remote);
         setLoading(false);
         return;
       }
-      setUseOfflineMediaStub(true);
       const resolved = getMockBattery(n) ?? BATTERIES_MOCK.find((b) => b.battery_id === n) ?? null;
       setBattery(resolved);
       setLoading(false);
@@ -55,24 +51,14 @@ export default function ServicePage() {
 
   const videoUrl = useMemo(() => {
     if (!battery) return "";
-    if (useOfflineMediaStub) return MOCK_VIDEO;
-    return resolveMediaUrl(battery.video);
-  }, [battery, useOfflineMediaStub]);
-  const posterUrl = useMemo(
-    () => {
-      if (!battery) return fallbackImageUrl();
-      if (useOfflineMediaStub) return MOCK_COVER;
-      return resolveMediaUrl(battery.photo_url) || fallbackImageUrl();
-    },
-    [battery, useOfflineMediaStub],
-  );
+    return resolveCatalogVideoUrl(battery);
+  }, [battery]);
+  const posterUrl = useMemo(() => {
+    if (!battery) return fallbackImageUrl();
+    return resolveCatalogPhotoUrl(battery) || fallbackImageUrl();
+  }, [battery]);
 
   const showVideo = Boolean(battery?.video?.trim()) && !mediaError;
-
-  const handleCatalogSearch = (e: FormEvent) => {
-    e.preventDefault();
-    navigate("/");
-  };
 
   if (!id || (!loading && !battery)) {
     return (
@@ -90,39 +76,9 @@ export default function ServicePage() {
     );
   }
 
-  const toolbarForm = (
-    <form className="toolbar__search-form" onSubmit={handleCatalogSearch}>
-      <label htmlFor="catalog-title-search-readonly" className="visually-hidden">
-        Поиск по типу аккумулятора
-      </label>
-      <span className="search-bar">
-        <input
-          id="catalog-title-search-readonly"
-          type="search"
-          className="search-input"
-          placeholder="Search by battery type"
-          readOnly
-          onFocus={() => navigate("/")}
-        />
-        <button type="submit" className="search-btn" aria-label="Search">
-          <svg className="search-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="11" cy="11" r="6" fill="none" stroke="currentColor" strokeWidth="2" />
-            <path
-              d="M16 16l4 4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
-        </button>
-      </span>
-    </form>
-  );
-
   return (
     <>
-      <CatalogChrome embedInLayout toolbarForm={toolbarForm} />
+      <CatalogChrome embedInLayout />
       <div className="detail-wrapper detail-wrapper--battery">
         <Link to="/" className="back-link">
           ← Back to catalog

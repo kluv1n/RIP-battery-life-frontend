@@ -9,6 +9,7 @@ interface ImportMetaEnv {
   readonly VITE_MINIO_BASE?: string;
   readonly VITE_MEDIA_BASE?: string;
   readonly VITE_GUEST_APP?: string;
+  readonly VITE_BUILD_ID?: string;
   readonly VITE_DEV_HTTPS?: string;
 }
 

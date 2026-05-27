@@ -35,7 +35,11 @@ export default function BatteryAppHeader() {
             className="battery-navbar__brand-center position-absolute start-50 mx-0 py-2"
             aria-label="На главную"
           >
-            <img src="/img/logo.svg" alt="НЭТЕР" className="header-logo__img" />
+            <img
+              src={`${import.meta.env.BASE_URL}img/logo.svg`}
+              alt="НЭТЕР"
+              className="header-logo__img"
+            />
           </Navbar.Brand>
           <Navbar.Collapse id="battery-main-nav" className="battery-navbar__collapse justify-content-lg-end">
             <Nav className="battery-navbar__nav ms-lg-auto" navbar>

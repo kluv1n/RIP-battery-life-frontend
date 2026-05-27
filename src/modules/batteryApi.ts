@@ -1,5 +1,6 @@
 import axios from "axios";
-import { apiBaseUrl, minioPublicBase } from "./runtimeConfig";
+import { apiBaseUrl, minioAbsoluteOrigin, minioPublicBase } from "./runtimeConfig";
+import { shouldUseTauriHttpPlugin, tauriHttpGetJson } from "./tauriHttp";
 import type { BatteryServiceMock } from "./batteryApi.types";
 
 export type {
@@ -52,34 +53,52 @@ function proxifyMinioDevUrl(url: string): string {
   try {
     const u = new URL(url);
     const port = u.port || (u.protocol === "https:" ? "443" : "80");
-    const isMinioDev =
+    const isLocalMinio =
       (u.hostname === "localhost" || u.hostname === "127.0.0.1") && port === "9000";
-    if (isMinioDev) {
-      const path = u.pathname
-        .split("/")
-        .map((segment) => (segment ? encodeURIComponent(decodeURIComponent(segment)) : segment))
-        .join("/");
-      return `/minio${path}${u.search}`;
+    if (!isLocalMinio) return url;
+
+    const pathWithQuery = `${u.pathname}${u.search}`;
+
+    if (import.meta.env.DEV) {
+      return `/minio${pathWithQuery}`;
     }
+
+    const origin = minioAbsoluteOrigin();
+    if (!origin) return url;
+    return `${origin}${pathWithQuery}`;
   } catch {
     /* ignore */
   }
   return url;
 }
 
+/** Пути из `public/` (`/mock/...`) — с учётом BASE_URL для GitHub Pages. */
+function publicAssetUrl(path: string): string {
+  const base = import.meta.env.BASE_URL || "/";
+  const normalized = path.replace(/^\//, "");
+  return `${base}${normalized}`;
+}
+
 export function resolveMediaUrl(key: string): string {
   if (!key?.trim()) return fallbackImageUrl();
-  if (
-    key.startsWith("http://") ||
-    key.startsWith("https://") ||
-    key.startsWith("/") ||
-    key.startsWith("blob:") ||
-    key.startsWith("data:")
-  ) {
-    return key.startsWith("http") ? proxifyMinioDevUrl(key) : key;
+  if (key.startsWith("blob:") || key.startsWith("data:")) return key;
+  if (key.startsWith("http://") || key.startsWith("https://")) {
+    return proxifyMinioDevUrl(key);
+  }
+  if (key.startsWith("/")) {
+    return publicAssetUrl(key);
   }
   const normalized = key.replace(/^\//, "");
   return `${MINIO_PUBLIC_BASE}/${encodeStorageKey(normalized)}`;
+}
+
+/** Каталог/деталка: фото и видео конкретного типа (API / MinIO / mock). */
+export function resolveCatalogPhotoUrl(battery: BatteryServiceMock): string {
+  return resolveMediaUrl(battery.photo_url);
+}
+
+export function resolveCatalogVideoUrl(battery: BatteryServiceMock): string {
+  return resolveMediaUrl(battery.video);
 }
 
 function toEnglishClipDescription(input?: string): string {
@@ -162,27 +181,68 @@ function mapListResponse(data: BatteryServiceMock[] | BatteryListAPIEnvelope | u
   return (data.items ?? []).map((item) => normalizeBattery(item));
 }
 
-export async function listBatteryTypes(params?: { title?: string }): Promise<BatteryServiceMock[]> {
-  try {
-    const r = await batteryTypesAxios.get<BatteryServiceMock[] | BatteryListAPIEnvelope>(
-      "/battery_life_types",
-      {
-        params: params?.title ? { title: params.title } : undefined,
-        headers: { Accept: "application/json" },
-      },
-    );
-    return mapListResponse(r.data);
-  } catch {
-    return [];
+function formatApiError(err: unknown): string {
+  if (axios.isAxiosError(err)) {
+    const status = err.response?.status;
+    const code = err.code ?? "ERR";
+    const msg = err.message || "Network error";
+    return status ? `${msg} (HTTP ${status})` : `${msg} (${code})`;
   }
+  return err instanceof Error ? err.message : String(err);
+}
+
+function authHeaders(): Record<string, string> {
+  const token = localStorage.getItem("token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+function absoluteApiUrl(path: string, params?: { title?: string }): string {
+  const base = apiBaseUrl.replace(/\/$/, "");
+  const suffix = path.startsWith("/") ? path : `/${path}`;
+  const url = new URL(`${base}${suffix}`);
+  if (params?.title) url.searchParams.set("title", params.title);
+  return url.toString();
+}
+
+async function batteryTypesGet<T>(path: string, params?: { title?: string }): Promise<T> {
+  if (shouldUseTauriHttpPlugin()) {
+    return tauriHttpGetJson<T>(absoluteApiUrl(path, params), authHeaders());
+  }
+  const r = await batteryTypesAxios.get<T>(path, {
+    params: params?.title ? { title: params.title } : undefined,
+    headers: { Accept: "application/json", ...authHeaders() },
+  });
+  return r.data;
+}
+
+export type ListBatteryTypesResult =
+  | { ok: true; items: BatteryServiceMock[] }
+  | { ok: false; error: string };
+
+export async function listBatteryTypesWithMeta(
+  params?: { title?: string },
+): Promise<ListBatteryTypesResult> {
+  try {
+    const data = await batteryTypesGet<BatteryServiceMock[] | BatteryListAPIEnvelope>(
+      "/battery_life_types",
+      params,
+    );
+    return { ok: true, items: mapListResponse(data) };
+  } catch (err) {
+    return { ok: false, error: formatApiError(err) };
+  }
+}
+
+/** @deprecated Prefer listBatteryTypesWithMeta — пустой массив скрывал ошибку сети. */
+export async function listBatteryTypes(params?: { title?: string }): Promise<BatteryServiceMock[]> {
+  const result = await listBatteryTypesWithMeta(params);
+  return result.ok ? result.items : [];
 }
 
 export async function getBatteryType(id: number): Promise<BatteryServiceMock | null> {
   try {
-    const r = await batteryTypesAxios.get<unknown>(`/battery_life_type/${id}`, {
-      headers: { Accept: "application/json" },
-    });
-    return normalizeBattery(unwrapBatteryTypePayload(r.data));
+    const data = await batteryTypesGet<unknown>(`/battery_life_type/${id}`);
+    return normalizeBattery(unwrapBatteryTypePayload(data));
   } catch {
     return null;
   }

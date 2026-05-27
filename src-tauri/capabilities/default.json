@@ -3,5 +3,15 @@
   "identifier": "default",
   "description": "Default capability for guest app",
   "windows": ["main"],
-  "permissions": ["core:default", "shell:allow-open"]
+  "permissions": [
+    "core:default",
+    "shell:allow-open",
+    {
+      "identifier": "http:default",
+      "allow": [
+        { "url": "http://*:*/*" },
+        { "url": "https://*:*/*" }
+      ]
+    }
+  ]
 }

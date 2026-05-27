@@ -2,15 +2,15 @@ import { Link } from "react-router-dom";
 import { useEffect, useState, type MouseEvent } from "react";
 import {
   fallbackImageUrl,
-  resolveMediaUrl,
+  resolveCatalogPhotoUrl,
   type BatteryServiceMock,
 } from "../../modules/batteryApi";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { addBatteryTypeToBatteryLifeApplication } from "../../store/slices/batteryLifeApplicationSlice";
 
-function photoSrc(photo_url: string, imageError: boolean): string {
-  if (imageError || !photo_url?.trim()) return fallbackImageUrl();
-  return resolveMediaUrl(photo_url);
+function photoSrc(battery: BatteryServiceMock, imageError: boolean): string {
+  if (imageError) return fallbackImageUrl();
+  return resolveCatalogPhotoUrl(battery) || fallbackImageUrl();
 }
 
 function catalogImageAlt(battery: BatteryServiceMock): string {
@@ -45,12 +45,12 @@ export default function ServiceCard({
   const isAuthenticated = useAppSelector((s) => s.user.isAuthenticated);
 
   const [imageError, setImageError] = useState(false);
-  const [imageUrl, setImageUrl] = useState(photoSrc(battery.photo_url, false));
+  const [imageUrl, setImageUrl] = useState(photoSrc(battery, false));
 
   useEffect(() => {
     setImageError(false);
-    setImageUrl(photoSrc(battery.photo_url, false));
-  }, [battery.photo_url]);
+    setImageUrl(photoSrc(battery, false));
+  }, [battery.battery_id, battery.photo_url]);
 
   const handleImageError = () => {
     setImageError(true);

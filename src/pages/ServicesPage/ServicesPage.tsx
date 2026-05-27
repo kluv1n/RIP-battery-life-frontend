@@ -6,10 +6,11 @@ import ServicesList from "../../components/ServicesList/ServicesList";
 import { useBatteryImageSearch } from "../../hooks/useBatteryImageSearch";
 import {
   batteryClipDescription,
-  listBatteryTypes,
+  listBatteryTypesWithMeta,
   type BatteryServiceMock,
 } from "../../modules/batteryApi";
 import { BATTERIES_MOCK, filterMockBatteries } from "../../modules/mock";
+import { hasRemoteApi } from "../../modules/runtimeConfig";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { setCatalogTitleFilter } from "../../store/slices/catalogFiltersSlice";
 import "./ServicesPage.css";
@@ -30,23 +31,22 @@ export default function ServicesPage() {
     let cancelled = false;
     setLoading(true);
     const load = async () => {
-      try {
-        const remote = await listBatteryTypes();
-        if (cancelled) return;
-        if (remote.length > 0) {
-          setSourceBatteries(remote);
-          setUseMock(false);
-        } else {
-          setSourceBatteries(BATTERIES_MOCK);
-          setUseMock(true);
-        }
-      } catch {
-        if (cancelled) return;
+      if (!hasRemoteApi) {
         setSourceBatteries(BATTERIES_MOCK);
         setUseMock(true);
-      } finally {
         if (!cancelled) setLoading(false);
+        return;
       }
+      const result = await listBatteryTypesWithMeta();
+      if (cancelled) return;
+      if (result.ok && result.items.length > 0) {
+        setSourceBatteries(result.items);
+        setUseMock(false);
+      } else {
+        setSourceBatteries(BATTERIES_MOCK);
+        setUseMock(true);
+      }
+      if (!cancelled) setLoading(false);
     };
     void load();
     return () => {
@@ -56,7 +56,7 @@ export default function ServicesPage() {
 
   /** Фильтр по теме — на клиенте; к API только по кнопке «Search». */
   const batteries = useMemo(() => {
-    if (useMock || import.meta.env.VITE_GUEST_APP === "true") {
+    if (useMock) {
       return filterMockBatteries({ title: titleFilter });
     }
     const t = titleFilter.trim().toLowerCase();
@@ -70,24 +70,22 @@ export default function ServicesPage() {
   }, [sourceBatteries, titleFilter, useMock]);
 
   const runServerSearch = useCallback(async () => {
-    if (useMock || import.meta.env.VITE_GUEST_APP === "true") return;
+    if (useMock) return;
     setLoading(true);
-    try {
-      const remote = await listBatteryTypes(
-        titleFilter.trim() ? { title: titleFilter.trim() } : undefined,
-      );
-      if (remote.length > 0) {
-        setSourceBatteries(remote);
-        setUseMock(false);
-      } else if (!titleFilter.trim()) {
-        setSourceBatteries([]);
-      }
-    } catch {
+    const result = await listBatteryTypesWithMeta(
+      titleFilter.trim() ? { title: titleFilter.trim() } : undefined,
+    );
+    if (result.ok && result.items.length > 0) {
+      setSourceBatteries(result.items);
+      setUseMock(false);
+    } else if (result.ok && !titleFilter.trim()) {
+      setSourceBatteries([]);
+      setUseMock(false);
+    } else {
       setSourceBatteries(BATTERIES_MOCK);
       setUseMock(true);
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   }, [titleFilter, useMock]);
 
   const clipItems = useMemo(

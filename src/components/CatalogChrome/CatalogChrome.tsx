@@ -8,7 +8,8 @@ export default function CatalogChrome({
   toolbarLeading,
   embedInLayout,
 }: {
-  toolbarForm: ReactNode;
+  /** Центр тулбара (поиск). На деталке карточки не передаём. */
+  toolbarForm?: ReactNode;
   /** Слева (напр. поиск по фото); опционально. */
   toolbarLeading?: ReactNode;
   embedInLayout?: boolean;
@@ -18,13 +19,17 @@ export default function CatalogChrome({
       {embedInLayout ? null : (
         <header>
           <Link to="/" className="header-logo" aria-label="Home">
-            <img src="/img/logo.svg" alt="НЭТЕР" className="header-logo__img" />
+            <img
+              src={`${import.meta.env.BASE_URL}img/logo.svg`}
+              alt="НЭТЕР"
+              className="header-logo__img"
+            />
           </Link>
         </header>
       )}
       <div className="toolbar toolbar--catalog">
         <div className="toolbar__catalog-left">{toolbarLeading ?? null}</div>
-        <div className="toolbar__catalog-center">{toolbarForm}</div>
+        {toolbarForm ? <div className="toolbar__catalog-center">{toolbarForm}</div> : null}
         <div className="cart-wrap cart-wrap--catalog-end">
           <CartRow />
         </div>
