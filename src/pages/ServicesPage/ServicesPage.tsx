@@ -4,6 +4,7 @@ import ServicesFilterBar from "../../components/ServicesFilterBar/ServicesFilter
 import ServicesList from "../../components/ServicesList/ServicesList";
 import type { BatteryServiceMock } from "../../modules/batteryApi";
 import { BATTERIES_MOCK, filterMockBatteries, type BatteryFilters } from "../../modules/mock";
+import { batteryTypesService } from "../../services";
 
 const initialFilters = (): BatteryFilters => ({ title: "" });
 
@@ -11,15 +12,42 @@ export default function ServicesPage() {
   const [batteries, setBatteries] = useState<BatteryServiceMock[]>(BATTERIES_MOCK);
   const [filters, setFilters] = useState<BatteryFilters>(initialFilters);
   const [loading, setLoading] = useState(false);
+  const [useMock, setUseMock] = useState(true);
 
   useEffect(() => {
-    setBatteries(filterMockBatteries(initialFilters()));
+    let cancelled = false;
+    const load = async () => {
+      const remote = await batteryTypesService.list();
+      if (cancelled) return;
+      if (remote.length > 0) {
+        setBatteries(remote);
+        setUseMock(false);
+      } else {
+        setBatteries(BATTERIES_MOCK);
+        setUseMock(true);
+      }
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const applyFilters = () => {
+  const applyFilters = async () => {
     setLoading(true);
     try {
+      const remote = await batteryTypesService.list({ title: filters.title });
+      if (remote.length > 0) {
+        setBatteries(remote);
+        setUseMock(false);
+      } else if (useMock) {
+        setBatteries(filterMockBatteries(filters));
+      } else {
+        setBatteries([]);
+      }
+    } catch {
       setBatteries(filterMockBatteries(filters));
+      setUseMock(true);
     } finally {
       setLoading(false);
     }

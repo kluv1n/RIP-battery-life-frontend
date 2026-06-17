@@ -9,6 +9,7 @@ import {
   resolveMediaUrl,
   type BatteryServiceMock,
 } from "../../modules/batteryApi";
+import { batteryTypesService } from "../../services";
 
 export default function ServicePage() {
   const [battery, setBattery] = useState<BatteryServiceMock | null>(null);
@@ -18,15 +19,28 @@ export default function ServicePage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!id) {
-      setBattery(null);
-      return;
-    }
-    setMediaError(false);
-    const n = Number(id);
-    const resolved =
-      getMockBattery(n) ?? BATTERIES_MOCK.find((b) => b.battery_id === n) ?? null;
-    setBattery(resolved);
+    let cancelled = false;
+    const load = async () => {
+      if (!id) {
+        setBattery(null);
+        return;
+      }
+      setMediaError(false);
+      const n = Number(id);
+      const remote = await batteryTypesService.getById(n);
+      if (cancelled) return;
+      if (remote) {
+        setBattery(remote);
+        return;
+      }
+      const resolved =
+        getMockBattery(n) ?? BATTERIES_MOCK.find((b) => b.battery_id === n) ?? null;
+      setBattery(resolved);
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   const videoUrl = useMemo(() => (battery ? resolveMediaUrl(battery.video) : ""), [battery]);
