@@ -16,8 +16,12 @@
     "deploy:gh-pages": "npm run build:pages && gh-pages -d dist --dotfiles",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
+    "tauri:dev:autoip": "bash scripts/tauri-dev-autoip.sh",
     "tauri:dev:lan": "cross-env VITE_API_ORIGIN=http://192.168.56.1:8080 VITE_MINIO_PUBLIC_BASE=http://192.168.56.1:9000/batteries npm run tauri:dev",
     "tauri:build": "npm run build:tauri && tauri build",
+    "tauri:build:app": "npm run build:tauri && tauri build --bundles app",
+    "tauri:open": "bash scripts/tauri-open-app.sh",
+    "tauri:run": "bash scripts/tauri-set-ip.sh && npm run tauri:build:app && npm run tauri:open",
     "tauri:build:lan": "cross-env VITE_API_ORIGIN=http://192.168.56.1:8080 VITE_MINIO_PUBLIC_BASE=http://192.168.56.1:9000/batteries npm run build:tauri && tauri build"
   },
   "dependencies": {

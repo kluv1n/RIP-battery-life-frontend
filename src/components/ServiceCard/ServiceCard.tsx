@@ -7,6 +7,7 @@ import {
 } from "../../modules/batteryApi";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { addBatteryTypeToBatteryLifeApplication } from "../../store/slices/batteryLifeApplicationSlice";
+import "./ServiceCard.css";
 
 function photoSrc(battery: BatteryServiceMock, imageError: boolean): string {
   if (imageError) return fallbackImageUrl();
@@ -88,37 +89,35 @@ export default function ServiceCard({
   if (similarity != null) {
     return (
       <div className="card-service-wrapper">
-        <div className="card card--photo-rank">
-          <Link
-            to={`/battery/${battery.battery_id}`}
-            state={{ battery }}
-            className="card__link card__link--photo-rank"
-          >
-            <div className="card__photo-rank-thumb">
-              <img
-                src={imageError ? fallbackImageUrl() : imageUrl}
-                alt={catalogImageAlt(battery)}
-                width={120}
-                height={120}
-                decoding="async"
-                onError={handleImageError}
-              />
-            </div>
-            <div className="card__photo-rank-body">
-              <h1>{battery.title}</h1>
-              <p className="card__employees">
-                Capacity & voltage: {battery.capacity_mah} mAh, {battery.voltage_v} V
+        <Link
+          to={`/battery/${battery.battery_id}`}
+          state={{ battery }}
+          className="card card--photo-rank"
+        >
+          <div className="card__photo-rank-thumb">
+            <img
+              src={imageError ? fallbackImageUrl() : imageUrl}
+              alt={catalogImageAlt(battery)}
+              width={120}
+              height={120}
+              decoding="async"
+              onError={handleImageError}
+            />
+          </div>
+          <div className="card__photo-rank-body">
+            <h1>{battery.title}</h1>
+            <p className="card__employees">
+              Capacity & voltage: {battery.capacity_mah} mAh, {battery.voltage_v} V
+            </p>
+            {ru ? <p className="card__photo-rank-ru">{ru}</p> : null}
+            {en ? (
+              <p className="card__photo-rank-en" lang="en">
+                {en}
               </p>
-              {ru ? <p className="card__photo-rank-ru">{ru}</p> : null}
-              {en ? (
-                <p className="card__photo-rank-en" lang="en">
-                  {en}
-                </p>
-              ) : null}
-              <p className="card__similarity">Match: {similarityPercent(similarity)}</p>
-            </div>
-          </Link>
-        </div>
+            ) : null}
+            <p className="card__similarity">Match: {similarityPercent(similarity)}</p>
+          </div>
+        </Link>
         {addBtn}
       </div>
     );
@@ -126,26 +125,26 @@ export default function ServiceCard({
 
   return (
     <div className="card-service-wrapper">
-      <div className="card">
-        <Link to={`/battery/${battery.battery_id}`} state={{ battery }} className="card__link">
-          <div className="card__media">
-            <img
-              className="card__photo"
-              src={imageError ? fallbackImageUrl() : imageUrl}
-              alt={catalogImageAlt(battery)}
-              width={400}
-              height={300}
-              decoding="async"
-              onError={handleImageError}
-            />
-          </div>
-          <h1>{battery.title}</h1>
-          <p className="card__employees">
-            Capacity & voltage: {battery.capacity_mah} mAh, {battery.voltage_v} V
-          </p>
-          <p className="card__description card__description--tail">{battery.short_description}</p>
-        </Link>
-      </div>
+      <Link to={`/battery/${battery.battery_id}`} state={{ battery }} className="card">
+        <div className="card__media">
+          <img
+            className="card__photo"
+            src={imageError ? fallbackImageUrl() : imageUrl}
+            alt={catalogImageAlt(battery)}
+            width={400}
+            height={300}
+            decoding="async"
+            onError={handleImageError}
+          />
+        </div>
+        <h1>{battery.title}</h1>
+        <p className="card__employees">
+          Capacity & voltage: {battery.capacity_mah} mAh, {battery.voltage_v} V
+        </p>
+        <p className="card__description card__description--tail">
+          {battery.short_description}
+        </p>
+      </Link>
       {addBtn}
     </div>
   );
