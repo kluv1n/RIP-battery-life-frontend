@@ -91,6 +91,31 @@ header {
     position: relative;
 }
 
+.toolbar.toolbar--catalog-unified {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.toolbar--catalog-unified .catalog-photo-search {
+    flex-shrink: 0;
+    flex-wrap: nowrap;
+}
+
+.toolbar--catalog-unified .services-filter-bar,
+.toolbar--catalog-unified .toolbar__search-form {
+    flex: 1 1 auto;
+    min-width: 140px;
+}
+
+.toolbar--catalog-unified .cart-wrap--catalog-end {
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
 .toolbar.toolbar--catalog {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);

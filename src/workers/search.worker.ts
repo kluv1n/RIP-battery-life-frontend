@@ -9,6 +9,11 @@ import {
 
 env.allowLocalModels = false;
 env.allowRemoteModels = true;
+// jsdelivr недоступен — WASM с dev-сервера (/onnx-runtime/ в vite.config.ts).
+if (env.backends.onnx.wasm) {
+  env.backends.onnx.wasm.numThreads = 1;
+  env.backends.onnx.wasm.wasmPaths = `${self.location.origin}/onnx-runtime/`;
+}
 
 const MODEL_ID = "Xenova/siglip-base-patch16-224";
 

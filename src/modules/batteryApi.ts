@@ -3,7 +3,8 @@
 export interface BatteryServiceMock {
   battery_id: number;
   title: string;
-  short_description: string;
+  /** Краткое описание на английском (каталог + CLIP / SigLIP, лаб. 6). */
+  short_description_en: string;
   description: string;
   is_deleted: boolean;
   /** Как в шаблоне: имя файла в MinIO или полный URL; при пустом — заглушка. */
@@ -118,7 +119,7 @@ function toEnglishClipDescription(input?: string): string {
 }
 
 export function batteryClipDescription(battery: BatteryServiceMock): string {
-  const text = battery.short_description?.trim();
+  const text = battery.short_description_en?.trim();
   if (text) return toEnglishClipDescription(text);
   return toEnglishClipDescription(
     `${battery.title} battery with ${battery.capacity_mah} mAh nameplate rating; cylindrical or prismatic metal housing and insulated conductor exits suitable for CLIP image–text matching.`,
@@ -150,7 +151,7 @@ function normalizeBattery(
   return {
     battery_id: raw.battery_id ?? raw.id ?? 0,
     title: raw.title ?? "",
-    short_description: raw.short_description ?? "",
+    short_description_en: raw.short_description_en ?? "",
     description: raw.description ?? "",
     is_deleted: Boolean(raw.is_deleted),
     photo_url: raw.photo_url ?? raw.photo ?? "",

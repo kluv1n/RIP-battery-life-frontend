@@ -1,6 +1,7 @@
 import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Button, ProgressBar, Spinner } from "react-bootstrap";
 import CatalogChrome from "../../components/CatalogChrome/CatalogChrome";
+import CartRow from "../../components/CartRow/CartRow";
 import ServicesFilterBar from "../../components/ServicesFilterBar/ServicesFilterBar";
 import ServicesList from "../../components/ServicesList/ServicesList";
 import { useBatteryImageSearch } from "../../hooks/useBatteryImageSearch";
@@ -113,7 +114,7 @@ export default function ServicesPage() {
 
   const imageSearchActive = Boolean(imageEmbedding);
   const showClipProgress = clipSessionActive && clipItems.length > 0 && !clipReady && !workerError;
-  const uploadLabel = clipSessionActive && !clipReady ? "Loading model…" : "Upload photo";
+  const uploadLabel = clipSessionActive && !clipReady ? "Загрузка модели…" : "Загрузить фото";
   const isUploadDisabled = clipItems.length === 0 || (clipSessionActive && !clipReady);
   const visibleClipRows = imageSearchActive ? clipProcessed.filter((item) => item.isVisible) : [];
 
@@ -155,7 +156,7 @@ export default function ServicesPage() {
         onClick={handleClearImage}
         disabled={!selectedImage}
       >
-        Reset
+        Сбросить
       </Button>
       {showClipProgress ? (
         <ProgressBar
@@ -184,15 +185,27 @@ export default function ServicesPage() {
   );
 
   const emptyMessage = imageSearchActive
-    ? "No battery types loaded for photo search."
-    : "No battery types match the current filters.";
+    ? "Нет типов аккумуляторов выше порога сходства. Попробуйте другое фото."
+    : "По заданным фильтрам услуги не найдены.";
 
   return (
     <>
-      <CatalogChrome toolbarLeading={toolbarLeading} toolbarForm={toolbarForm} />
+      <CatalogChrome
+        toolbar={
+          <>
+            {toolbarLeading}
+            {toolbarForm}
+            <div className="cart-wrap cart-wrap--catalog-end">
+              <CartRow />
+            </div>
+          </>
+        }
+      />
       <div className="space">
-        {workerError ? <Alert variant="warning">Photo search error: {workerError}</Alert> : null}
-        <h2 className="section-title">Battery types</h2>
+        {workerError ? (
+          <Alert variant="warning">Ошибка поиска по фото: {workerError}</Alert>
+        ) : null}
+        <h2 className="section-title">Типы аккумуляторов</h2>
         {loading ? (
           <div className="services-loading">
             <Spinner animation="border" role="status" aria-label="Loading" />

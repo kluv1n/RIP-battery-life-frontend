@@ -22,7 +22,7 @@ export default function ServicesFilterBar({ query, onQueryChange, onSearch }: Se
             type="text"
             name="query"
             className="search-input"
-            placeholder="Search by battery type"
+            placeholder="Поиск по типу аккумулятора"
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
           />

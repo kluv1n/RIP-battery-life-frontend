@@ -12,16 +12,9 @@ function photoSrc(photo_url: string, imageError: boolean): string {
 }
 
 function catalogImageAlt(battery: BatteryServiceMock): string {
-  const d = battery.short_description?.trim();
+  const d = battery.short_description_en?.trim();
   if (!d) return battery.title;
   return `${battery.title}. ${d.length > 160 ? `${d.slice(0, 157)}…` : d}`;
-}
-
-function truncBlurb(text: string, maxLen: number): string {
-  const t = text.replace(/\s+/g, " ").trim();
-  if (!t) return "";
-  if (t.length <= maxLen) return t;
-  return `${t.slice(0, maxLen - 1).trimEnd()}…`;
 }
 
 function similarityPercent(raw: number): string {
@@ -50,40 +43,7 @@ export default function ServiceCard({
     setImageUrl(fallbackImageUrl());
   };
 
-  const ru = truncBlurb(battery.description, 320);
-  const en = truncBlurb(battery.short_description, 360);
-
-  if (similarity != null) {
-    return (
-      <div className="card card--photo-rank">
-        <Link to={`/battery/${battery.battery_id}`} className="card__link card__link--photo-rank">
-          <div className="card__photo-rank-thumb">
-            <img
-              src={imageError ? fallbackImageUrl() : imageUrl}
-              alt={catalogImageAlt(battery)}
-              width={120}
-              height={120}
-              decoding="async"
-              onError={handleImageError}
-            />
-          </div>
-          <div className="card__photo-rank-body">
-            <h1>{battery.title}</h1>
-            <p className="card__employees">
-              Capacity & voltage: {battery.capacity_mah} mAh, {battery.voltage_v} V
-            </p>
-            {ru ? <p className="card__photo-rank-ru">{ru}</p> : null}
-            {en ? (
-              <p className="card__photo-rank-en" lang="en">
-                {en}
-              </p>
-            ) : null}
-            <p className="card__similarity">Match: {similarityPercent(similarity)}</p>
-          </div>
-        </Link>
-      </div>
-    );
-  }
+  const enShort = battery.short_description_en?.trim();
 
   return (
     <div className="card">
@@ -101,9 +61,20 @@ export default function ServiceCard({
         </div>
         <h1>{battery.title}</h1>
         <p className="card__employees">
-          Capacity & voltage: {battery.capacity_mah} mAh, {battery.voltage_v} V
+          Ёмкость и напряжение: {battery.capacity_mah} мА·ч, {battery.voltage_v} В
         </p>
-        <p className="card__description card__description--tail">{battery.short_description}</p>
+        {enShort ? (
+          <p className="card__description card__description--tail" lang="en">
+            {enShort}
+          </p>
+        ) : (
+          <p className="card__description card__description--tail" aria-hidden="true">
+            &nbsp;
+          </p>
+        )}
+        {similarity != null ? (
+          <p className="card__similarity">Сходство: {similarityPercent(similarity)}</p>
+        ) : null}
       </Link>
     </div>
   );

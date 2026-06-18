@@ -156,9 +156,9 @@ export default function BatteryLifePage() {
                     <strong>Ёмкость и напряжение:</strong> {row.battery.capacity_mah} мА·ч,{" "}
                     {row.battery.voltage_v} В
                   </p>
-                  {row.battery.short_description ? (
-                    <p className="battery-life-item-card__line battery-life-item-card__short">
-                      {row.battery.short_description}
+                  {row.battery.short_description_en ? (
+                    <p className="battery-life-item-card__line battery-life-item-card__short" lang="en">
+                      {row.battery.short_description_en}
                     </p>
                   ) : null}
                   <div className="battery-life-item-card__user-fields">

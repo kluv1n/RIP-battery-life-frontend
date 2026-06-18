@@ -9,7 +9,7 @@ export default function ServicesList({
   clipScores?: ReadonlyMap<number, number>;
 }) {
   return (
-    <div className={clipScores != null ? "container container--similarity-rank" : "container"}>
+    <div className="container">
       {batteries.map((b) => (
         <ServiceCard key={b.battery_id} battery={b} similarity={clipScores?.get(b.battery_id)} />
       ))}

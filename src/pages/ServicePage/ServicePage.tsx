@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import CatalogChrome from "../../components/CatalogChrome/CatalogChrome";
+import CartRow from "../../components/CartRow/CartRow";
 import { BATTERIES_MOCK, getMockBattery, MOCK_COVER, MOCK_VIDEO } from "../../modules/mock";
 import {
   fallbackImageUrl,
@@ -11,7 +12,7 @@ import {
 } from "../../modules/batteryApi";
 
 function detailMediaAlt(b: BatteryServiceMock): string {
-  const d = b.short_description?.trim();
+  const d = b.short_description_en?.trim();
   if (!d) return b.title;
   return `${b.title}. ${d.length > 160 ? `${d.slice(0, 157)}…` : d}`;
 }
@@ -120,7 +121,16 @@ export default function ServicePage() {
 
   return (
     <>
-      <CatalogChrome toolbarForm={toolbarForm} />
+      <CatalogChrome
+        toolbar={
+          <>
+            {toolbarForm}
+            <div className="cart-wrap cart-wrap--catalog-end">
+              <CartRow />
+            </div>
+          </>
+        }
+      />
       <div className="detail-wrapper detail-wrapper--battery">
         <Link to="/" className="back-link">
           ← Back to catalog
@@ -194,7 +204,7 @@ export default function ServicePage() {
                 </div>
                 <div className="detail-video-desc__bottom">
                   <h1 className="detail-video-desc__title">{battery.title}</h1>
-                  <p className="detail-video-desc__short">{battery.short_description}</p>
+                  <p className="detail-video-desc__short" lang="en">{battery.short_description_en}</p>
                   <div className="detail-video-desc__metrics-text">
                     <p className="detail-video-desc__metric-row">
                       <strong>Current:</strong> {battery.detail_current_a_str} A
