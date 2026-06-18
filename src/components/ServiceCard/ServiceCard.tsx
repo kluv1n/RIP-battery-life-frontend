@@ -7,6 +7,7 @@ import {
 } from "../../modules/batteryApi";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { addBatteryTypeToBatteryLifeApplication } from "../../store/slices/batteryLifeApplicationSlice";
+import { formatBatteryCapacityVoltage } from "../../utils/batterySpec";
 import "./ServiceCard.css";
 
 function photoSrc(battery: BatteryServiceMock, imageError: boolean): string {
@@ -72,8 +73,8 @@ export default function ServiceCard({
     }
   };
 
-  const ru = truncBlurb(battery.description, 320);
-  const en = truncBlurb(battery.short_description, 360);
+  const specLine = formatBatteryCapacityVoltage(battery);
+  const extraDescription = truncBlurb(battery.description, 320);
 
   const addBtn = (
     <button
@@ -106,16 +107,12 @@ export default function ServiceCard({
           </div>
           <div className="card__photo-rank-body">
             <h1>{battery.title}</h1>
-            <p className="card__employees">
-              Capacity & voltage: {battery.capacity_mah} mAh, {battery.voltage_v} V
-            </p>
-            {ru ? <p className="card__photo-rank-ru">{ru}</p> : null}
-            {en ? (
-              <p className="card__photo-rank-en" lang="en">
-                {en}
-              </p>
+            <p className="card__employees">{specLine}</p>
+            {battery.short_description ? (
+              <p className="card__photo-rank-ru">{battery.short_description}</p>
             ) : null}
-            <p className="card__similarity">Match: {similarityPercent(similarity)}</p>
+            {extraDescription ? <p className="card__photo-rank-en">{extraDescription}</p> : null}
+            <p className="card__similarity">Совпадение: {similarityPercent(similarity)}</p>
           </div>
         </Link>
         {addBtn}
@@ -138,9 +135,7 @@ export default function ServiceCard({
           />
         </div>
         <h1>{battery.title}</h1>
-        <p className="card__employees">
-          Capacity & voltage: {battery.capacity_mah} mAh, {battery.voltage_v} V
-        </p>
+        <p className="card__employees">{specLine}</p>
         <p className="card__description card__description--tail">
           {battery.short_description}
         </p>

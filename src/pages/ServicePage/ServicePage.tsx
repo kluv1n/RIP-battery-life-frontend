@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import CatalogChrome from "../../components/CatalogChrome/CatalogChrome";
 import { BATTERIES_MOCK, getMockBattery } from "../../modules/mock";
 import {
@@ -63,7 +63,7 @@ export default function ServicePage() {
   if (!id || (!loading && !battery)) {
     return (
       <div className="space">
-        <p style={{ color: "var(--neter-text-muted)" }}>Battery type not found.</p>
+        <p style={{ color: "var(--neter-text-muted)" }}>Тип аккумулятора не найден.</p>
       </div>
     );
   }
@@ -71,7 +71,7 @@ export default function ServicePage() {
   if (loading || !battery) {
     return (
       <div className="space">
-        <p style={{ color: "var(--neter-text-muted)" }}>Loading…</p>
+        <p style={{ color: "var(--neter-text-muted)" }}>Загрузка…</p>
       </div>
     );
   }
@@ -80,16 +80,13 @@ export default function ServicePage() {
     <>
       <CatalogChrome embedInLayout />
       <div className="detail-wrapper detail-wrapper--battery">
-        <Link to="/" className="back-link">
-          ← Back to catalog
-        </Link>
         <div className="detail-card detail-card--split">
           <div className="detail-card__media">
             <div
               className="detail-card__video-frame detail-card__video-frame--desc"
               tabIndex={0}
               role="region"
-              aria-label="Video and summary overlay"
+              aria-label="Видео и описание типа аккумулятора"
             >
               {showVideo ? (
                 <video
@@ -133,7 +130,7 @@ export default function ServicePage() {
                         <path d="M10 11h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                       </svg>
                       <span className="detail-stat__value">{battery.capacity_mah}</span>
-                      <span className="detail-stat__unit">mAh</span>
+                      <span className="detail-stat__unit">мА·ч</span>
                     </div>
                     <div className="detail-stat detail-stat--rail">
                       <svg className="detail-stat__icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -146,7 +143,7 @@ export default function ServicePage() {
                         />
                       </svg>
                       <span className="detail-stat__value">{battery.voltage_v.toFixed(1)}</span>
-                      <span className="detail-stat__unit">V</span>
+                      <span className="detail-stat__unit">В</span>
                     </div>
                   </div>
                 </div>
@@ -155,10 +152,10 @@ export default function ServicePage() {
                   <p className="detail-video-desc__short">{battery.short_description}</p>
                   <div className="detail-video-desc__metrics-text">
                     <p className="detail-video-desc__metric-row">
-                      <strong>Current:</strong> {battery.detail_current_a_str} A
+                      <strong>Ток:</strong> {battery.detail_current_a_str} А
                     </p>
                     <p className="detail-video-desc__metric-row">
-                      <strong>Runtime:</strong> {battery.detail_runtime_hours_str} h
+                      <strong>Время работы:</strong> {battery.detail_runtime_hours_str} ч
                     </p>
                   </div>
                 </div>

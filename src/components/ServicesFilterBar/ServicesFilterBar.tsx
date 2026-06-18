@@ -24,12 +24,12 @@ export default function ServicesFilterBar({ query, onQueryChange, onSearch }: Se
             id="catalog-title-search"
             type="search"
             className="search-input form-control"
-            placeholder="Search by battery type"
+            placeholder="Поиск по типу аккумулятора"
             value={query}
             autoComplete="off"
             onChange={(e) => onQueryChange(e.target.value)}
           />
-          <button type="submit" className="search-btn" aria-label="Search">
+          <button type="submit" className="search-btn" aria-label="Найти">
             <svg className="search-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
               <circle cx="11" cy="11" r="6" fill="none" stroke="currentColor" strokeWidth="2" />
               <path

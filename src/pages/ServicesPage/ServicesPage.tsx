@@ -152,7 +152,7 @@ export default function ServicesPage() {
 
   const imageSearchActive = Boolean(imageEmbedding);
   const showClipProgress = clipSessionActive && clipItems.length > 0 && !clipReady && !workerError;
-  const uploadLabel = clipSessionActive && !clipReady ? "Loading model…" : "Upload photo";
+  const uploadLabel = clipSessionActive && !clipReady ? "Загрузка модели…" : "Загрузить фото";
   const isUploadDisabled = clipItems.length === 0 || (clipSessionActive && !clipReady);
   const visibleClipRows = imageSearchActive ? clipProcessed.filter((item) => item.isVisible) : [];
 
@@ -171,7 +171,7 @@ export default function ServicesPage() {
   }, [imageSearchActive, batteries, visibleClipRows, batteryById]);
 
   const toolbarLeading = (
-    <div className="catalog-photo-search" aria-label="Search similar batteries by photo">
+    <div className="catalog-photo-search" aria-label="Поиск похожих типов АКБ по фото">
       <input
         id="catalog-photo-upload"
         type="file"
@@ -196,7 +196,7 @@ export default function ServicesPage() {
         onClick={handleClearImage}
         disabled={!selectedImage}
       >
-        Reset
+        Сбросить
       </Button>
       {showClipProgress ? (
         <ProgressBar
@@ -207,7 +207,7 @@ export default function ServicesPage() {
         />
       ) : null}
       {selectedImage ? (
-        <img className="catalog-toolbar-row__thumb" src={selectedImage} alt="Uploaded query image" />
+        <img className="catalog-toolbar-row__thumb" src={selectedImage} alt="Загруженное фото для поиска" />
       ) : null}
     </div>
   );
@@ -221,18 +221,18 @@ export default function ServicesPage() {
   );
 
   const emptyMessage = imageSearchActive
-    ? "No battery types loaded for photo search."
-    : "No battery types match the current filters.";
+    ? "Нет типов АКБ для поиска по фото."
+    : "Нет типов АКБ по текущим фильтрам.";
 
   return (
     <>
       <CatalogChrome embedInLayout toolbarLeading={toolbarLeading} toolbarForm={toolbarForm} />
       <div className="space">
-        {workerError ? <Alert variant="warning">Photo search error: {workerError}</Alert> : null}
-        <h2 className="section-title">Battery types</h2>
+        {workerError ? <Alert variant="warning">Ошибка поиска по фото: {workerError}</Alert> : null}
+        <h2 className="section-title">Типы аккумуляторов</h2>
         {loading ? (
           <div className="services-loading">
-            <Spinner animation="border" role="status" aria-label="Loading" />
+            <Spinner animation="border" role="status" aria-label="Загрузка" />
           </div>
         ) : displayBatteries.length > 0 ? (
           <ServicesList batteries={displayBatteries} clipScores={clipScoresMap} />

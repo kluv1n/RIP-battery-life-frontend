@@ -20,7 +20,7 @@ import {
   updateBatteryLifeApplicationDraft,
   updateBatteryLifeItemLine,
 } from "../../store/slices/batteryLifeApplicationSlice";
-import { applicationStatusLabelEn } from "../../utils/applicationStatusEn";
+import { applicationStatusLabel } from "../../utils/applicationStatusLabel";
 import "./BatteryLifePage.css";
 
 type RowDraft = Pick<BatteryLifeItemDetailJSON, "current_ma" | "quantity">;
@@ -192,9 +192,6 @@ export default function BatteryLifePage() {
         </div>
       ) : null}
       <div className={`battery-life-detail ${busy ? "battery-life-detail--blocked" : ""}`}>
-        <Link to="/" className="back-link">
-          ← К каталогу
-        </Link>
         <div className="battery-life-detail__header-card">
           <h1 className="battery-life-detail__title">Заявка на расчёт времени работы АКБ</h1>
           <div className="battery-life-detail__info">
@@ -202,7 +199,7 @@ export default function BatteryLifePage() {
               <strong>ID заявки:</strong> {applicationId}
             </div>
             <div className="battery-life-detail__info-item">
-              <strong>Статус:</strong> {applicationStatusLabelEn(life.status)}
+              <strong>Статус:</strong> {applicationStatusLabel(life.status)}
             </div>
             <div className="battery-life-detail__info-item">
               <strong>Позиций в заявке:</strong> {data.items.length}

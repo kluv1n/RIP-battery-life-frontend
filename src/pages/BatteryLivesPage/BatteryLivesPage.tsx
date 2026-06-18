@@ -8,7 +8,7 @@ import {
   setListFilters,
 } from "../../store/slices/batteryLifeApplicationSlice";
 import { ROUTES } from "../../routePaths";
-import { applicationStatusLabelEn } from "../../utils/applicationStatusEn";
+import { applicationStatusLabel } from "../../utils/applicationStatusLabel";
 import "./BatteryLivesPage.css";
 
 /** Число позиций с ненулевым расчётом (как «1 непустых» в эталоне). */
@@ -206,7 +206,7 @@ export default function BatteryLivesPage() {
                         {id}
                       </button>
                     </td>
-                    <td>{applicationStatusLabelEn(row.status)}</td>
+                    <td>{applicationStatusLabel(row.status)}</td>
                     <td>{row.title?.trim() ? row.title : "—"}</td>
                     <td className={filled > 0 ? "battery-lives-page__result--filled" : ""}>
                       {formatNonEmptyLabel(filled)}

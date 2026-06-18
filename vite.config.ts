@@ -1,8 +1,10 @@
+import fs from "node:fs";
+import path from "node:path";
 import type { Plugin } from "vite";
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
+import mkcert from "vite-plugin-mkcert";
 import { VitePWA } from "vite-plugin-pwa";
-import basicSsl from "@vitejs/plugin-basic-ssl";
 
 /** GitHub Pages: только web manifest, без service worker (иначе кэш и падение на ort-wasm). */
 function pagesManifestOnlyPlugin(
@@ -39,6 +41,11 @@ export default defineConfig(({ mode }) => {
   const base = isGuestApp ? "/" : env.VITE_BASE_PATH || "/";
   const baseWithSlash = base.endsWith("/") ? base : `${base}/`;
   const useHttps = env.VITE_DEV_HTTPS === "true";
+  const rootDir = process.cwd();
+  const manualCertPath = path.resolve(rootDir, "cert.crt");
+  const manualKeyPath = path.resolve(rootDir, "cert.key");
+  const useManualHttpsCerts =
+    useHttps && fs.existsSync(manualCertPath) && fs.existsSync(manualKeyPath);
 
   const pwaManifest = {
     name: "Battery Life — типы АКБ",
@@ -63,7 +70,7 @@ export default defineConfig(({ mode }) => {
     base,
     plugins: [
       react(),
-      ...(useHttps ? [basicSsl()] : []),
+      ...(useHttps && !useManualHttpsCerts ? [mkcert()] : []),
       ...(isGuestApp
         ? []
         : isPagesBuild
@@ -83,6 +90,14 @@ export default defineConfig(({ mode }) => {
             ]),
     ],
     server: {
+      ...(useManualHttpsCerts
+        ? {
+            https: {
+              cert: fs.readFileSync(manualCertPath),
+              key: fs.readFileSync(manualKeyPath),
+            },
+          }
+        : {}),
       watch: { usePolling: true },
       host: true,
       strictPort: true,
